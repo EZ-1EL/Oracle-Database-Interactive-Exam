@@ -50,4 +50,11 @@ Developed by Asim — EZEL.
 # Oracle-Database-Fundamentals-Interactive-Exam
 An interactive, mobile-friendly exam (83 questions) covering Oracle Database Fundamentals. Questions are in English with Arabic hints/explanations. Built as a single-page app using plain HTML, modern CSS, and vanilla JavaScript.
 
-To See [Demo]("https://ez-1el.github.io/Oracle-Database-Interactive-Exam/")
+## 🚀 To See Demo  
+👉 [Click here to view the live demo](https://ez-1el.github.io/Oracle-Database-Interactive-Exam/)
+
+---
+
+## 🖼️ Preview  
+![App Preview](Images/preview.png)
+
