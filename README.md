@@ -10,6 +10,11 @@ An interactive, mobile-friendly exam (83 questions) covering Oracle Database Fun
 - Review mode to see all correct answers and hints
 - Works great on mobile
 
+## 🖼️ Preview  
+![App Preview](preview.png)
+
+
+
 ## Getting Started
 
 ### Run locally
@@ -54,7 +59,4 @@ An interactive, mobile-friendly exam (83 questions) covering Oracle Database Fun
 👉 [Click here to view the live demo](https://ez-1el.github.io/Oracle-Database-Interactive-Exam/)
 
 ---
-
-## 🖼️ Preview  
-![App Preview](preview.png)
 
