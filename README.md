@@ -56,5 +56,5 @@ An interactive, mobile-friendly exam (83 questions) covering Oracle Database Fun
 ---
 
 ## 🖼️ Preview  
-![App Preview](Images/preview.png)
+![App Preview](preview.png)
 
