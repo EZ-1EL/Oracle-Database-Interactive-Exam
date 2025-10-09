@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 
-# Oracle Database Fundamentals — Interactive Exam
-=======
 # Interactive Exam Center — Oracle & Linux
 
 A small single-page interactive exam app built with plain HTML, modern CSS and vanilla JavaScript. Questions are written in English with Arabic hints; the UI is responsive and mobile-friendly.
