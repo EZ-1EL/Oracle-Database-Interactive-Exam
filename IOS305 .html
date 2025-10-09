@@ -1,0 +1,967 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>IOS305 - Linux Admintration2 </title>
+<style>
+:root {
+    --bg: #0b1020;
+    --card: #0b1324;
+    --accent: #22d3ee;
+    --accent-2: #06d6b8;
+    --muted: #9fb1c2;
+    --ok: #22c55e;
+    --bad: #ef4444;
+    --ring: #7dd3fc;
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-glow: 0 20px 40px rgba(2, 6, 23, 0.35)
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    font-family: Inter, system-ui, Arial;
+    direction: ltr;
+    background: radial-gradient(1200px 600px at 10% 0%, #0b1b3a 0%, #0b1020 50%), radial-gradient(1200px 600px at 100% 100%, #071427 0%, #0b1020 45%);
+    color: #e6eef6
+}
+
+.wrap {
+    width: 100%;
+    max-width: 860px;
+    margin: 24px auto;
+    padding: 16px
+}
+
+.card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: var(--card-glow)
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px
+}
+
+h1 {
+    font-size: 20px;
+    margin: 0
+}
+
+.meta {
+    color: var(--muted);
+    font-size: 13px
+}
+
+.timer {
+    font-weight: 800;
+    color: #b6c7d8;
+    letter-spacing: .4px
+}
+
+.question {
+    font-weight: 800;
+    margin-bottom: 12px;
+    font-size: 18px
+}
+
+.choices {
+    display: grid;
+    gap: 10px
+}
+
+.choice {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease
+}
+.choice:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(2, 6, 23, 0.25); border-color: rgba(255, 255, 255, 0.14) }
+.choice:active { transform: translateY(0) }
+.choice:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px }
+
+.choice[aria-disabled="true"] {
+    opacity: 0.7;
+    pointer-events: none;
+    filter: saturate(0.9)
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-top: 12px;
+    align-items: center
+}
+
+button {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: none;
+    color: #03151c;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: .2px;
+    box-shadow: 0 10px 20px rgba(6, 182, 212, 0.2);
+    transition: transform .12s ease, box-shadow .2s ease
+}
+button:hover { transform: translateY(-1px); box-shadow: 0 14px 26px rgba(6, 182, 212, 0.28) }
+button:active { transform: translateY(0) }
+button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px }
+
+button.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 10px 16px
+}
+button.secondary:hover { border-color: rgba(255, 255, 255, 0.22); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06) }
+
+.progress {
+    height: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 12px;
+    border: 1px solid var(--card-border)
+}
+
+.progress>i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    width: 0%;
+    box-shadow: 0 0 16px rgba(6, 214, 184, 0.45);
+    transition: width .35s ease
+}
+
+.result {
+    display: none;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 12px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.35));
+    border: 1px solid var(--card-border)
+}
+
+.result.show {
+    display: block
+}
+
+.hint {
+    margin-top: 8px;
+    color: #bcd0e1;
+    font-size: 14px;
+    direction: rtl;
+    font-style: italic;
+}
+
+.ordering-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px
+}
+
+.ordering-item {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    cursor: grab;
+    font-size: 14px;
+    transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease
+}
+.ordering-item:active { cursor: grabbing }
+.ordering-item:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(2, 6, 23, 0.25); border-color: rgba(255, 255, 255, 0.14) }
+
+.scorebig {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: .3px
+}
+
+footer {
+    margin-top: 16px;
+    color: #a7bed0;
+    font-size: 13px;
+    text-align: center
+}
+
+a {
+    color: var(--accent)
+}
+a:hover { color: var(--accent-2) }
+
+@media (max-width: 480px) {
+    .wrap {
+        padding: 10px;
+    }
+
+    .question {
+        font-size: 16px;
+    }
+
+    .choice,
+    .ordering-item {
+        padding: 12px;
+        font-size: 14px;
+        min-height: 44px;
+    }
+
+    .controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    button {
+        width: auto;
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+
+    #ordering {
+        min-height: 200px;
+    }
+
+    .ordering-list {
+        gap: 6px;
+    }
+}
+
+button, .choice, .ordering-item { -webkit-tap-highlight-color: transparent; }
+
+@keyframes floatGlow {
+    0% { box-shadow: var(--card-glow); }
+    50% { box-shadow: 0 28px 56px rgba(2, 6, 23, 0.45); }
+    100% { box-shadow: var(--card-glow); }
+}
+
+.card { animation: floatGlow 8s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+    .card, .choice, .ordering-item, .progress>i, button { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <header>
+      <div>
+        <h1>IOS305 - Linux Admintration2 Chapters Questions </h1>
+        <div class="meta">Questions in English — Hints & explanations in Arabic • Random order • Mobile-ready</div>
+      </div>
+      <div style="text-align:right">
+        <div class="timer" id="timer">10:00</div>
+        <div class="meta">Time left</div>
+      </div>
+    </header><div class="progress"><i id="prog"></i></div>
+<div id="quizArea"></div>
+
+<div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+  <button id="nextBtn">Next</button>
+  <button class="secondary" id="reviewBtn">Review Answers</button>
+  <button class="secondary" id="retryBtn">Retry</button>
+</div>
+
+<div id="final" style="display:none;margin-top:12px;text-align:center">
+  <div class="scorebig" id="scoreText"></div>
+  <div class="meta" id="scoreMsg"></div>
+</div>
+
+<footer>
+  Sources: Oracle RMAN & Recovery docs. Examples strictly follow the procedures you provided.<br>
+  Developed by Aasem - EZEL
+</footer>
+  </div>
+</div>
+<script>
+  // Timer (10 minutes)
+  let totalSeconds = 30 * 60;
+  let timerInterval;
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (totalSeconds <= 0) {
+        clearInterval(timerInterval);
+        finishQuiz();
+        return;
+      }
+      totalSeconds--;
+      const m = Math.floor(totalSeconds / 60), s = totalSeconds % 60;
+      document.getElementById('timer').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }, 1000);
+  }
+
+  // Questions (25) - English Qs, Arabic hints
+  const questionsMaster = [
+  {type:'tf', q:'True or False: Both BIOS and UEFI are used in newer computers?', ans:true, hint:'صحيح — في الحواسيب الحديثة، يُستخدم كل من BIOS (النظام الأساسي للإدخال/الإخراج، الذي يُعتبر تقليديًا) وUEFI (واجهة النظام الأساسي الموحدة، التي توفر دعمًا أفضل للأقراص الكبيرة وأمانًا إضافيًا) كآليات للبدء في التشغيل، مما يسمح بالتوافق مع الأجهزة المتنوعة.'},
+  {type:'tf', q:'True or False: By default, GRUB is stored in the master boot record?', ans:false, hint:'خطأ — افتراضيًا، يُخزن GRUB (Grand Unified Bootloader) في دليل /boot/grub2، وليس مباشرة في MBR (Master Boot Record)، حيث يتم تحميل الجزء الأولي من GRUB في MBR لكن الجسم الرئيسي يكون في نظام الملفات لتسهيل التحديثات.'},
+  {type:'mcq', q:'Which command is used to manage system services?', choices:['systemd','systemctl','sysVinit'], ans:1, hint:'systemctl هو الأمر الرئيسي لإدارة الخدمات في نظام systemd، حيث يتيح أوامر مثل start، stop، enable، وdisable للتحكم في الوحدات (units) مثل الخدمات، مما يجعله أكثر كفاءة من sysVinit التقليدي.'},
+  {type:'mcq', q:'Name the two directory paths where systemd unit files are stored.', choices:['/etc/systemd/system','/etc/lib/systemd/system','/usr/lib/systemd/system','/bin/systemd/system'], ans:2, hint:'المسارات الرئيسية لملفات وحدات systemd هي /etc/systemd/system (للتخصيصات المحلية والتجاوزات) و /usr/lib/systemd/system (للملفات الافتراضية المثبتة مع النظام)، مما يسمح بفصل الإعدادات الافتراضية عن التعديلات المخصصة لتجنب فقدانها أثناء التحديثات.'},
+  {type:'mcq', q:'What would the command systemctl restart rsyslog do?', choices:['start the rsyslog target','restart the systemctl service','restart the rsyslog service'], ans:2, hint:'الأمر systemctl restart rsyslog يُعيد تشغيل خدمة rsyslog (التي تُدار السجلات النظامية)، مما يوقفها مؤقتًا ثم يبدأها مرة أخرى دون إعادة تشغيل النظام بأكمله، وهو مفيد لتطبيق تغييرات الإعدادات دون تعطيل الخدمات الأخرى.'},
+  {type:'mcq', q:'In which target does the X window and the graphical desktop interface become available?', choices:['graphical target','multi-user target','rescue target'], ans:0, hint:'في graphical target، يتم تفعيل نظام X Window وواجهة المكتب الرسومية (مثل GNOME أو KDE)، مما يجعل النظام جاهزًا للوصول البصري، بينما multi-user target يدعم الوصول عبر الشبكة بدون واجهة رسومية، وrescue target للإصلاحات الطارئة فقط.'},
+  {type:'mcq', q:'What is the new system initialization scheme introduced in RHEL7?', choices:['systemd'], ans:0, hint:'systemd هو نظام التهيئة الجديد المُقدم في RHEL7، الذي يحل محل SysVinit بفضل دعمه للتشغيل المتوازي، إدارة التبعيات التلقائية، والوحدات المتنوعة (services، sockets، targets)، مما يحسن من سرعة البدء في التشغيل وكفاءة النظام.'},
+  {type:'mcq', q:'Which command enables you to make sure that a target is no longer eligible for automatic start on system boot?', choices:['systemctl disable unit','systemctl enable unit','systemctl set-default unit'], ans:0, hint:'الأمر systemctl disable unit يمنع الوحدة (مثل target أو service) من التشغيل التلقائي عند بدء تشغيل النظام، من خلال إزالة الروابط الرمزية في /etc/systemd/system، مما يضمن عدم التحميل التلقائي دون حذفه تمامًا.'},
+  {type:'mcq', q:'Which command should you use to show all service units that are currently loaded?', choices:['systemd','sysctl','sysVinit','systemctl'], ans:3, hint:'الأمر systemctl --type=service --all يعرض جميع وحدات الخدمات المحملة حاليًا، سواء كانت نشطة أو غير نشطة، مما يساعد في فحص حالة الخدمات المتاحة في systemd، وهو أفضل من sysctl الذي يتعامل مع معاملات النواة.'},
+  {type:'mcq', q:'How do you create a want for a service?', choices:['by masking this service','by creating a symbolic link in the /etc/systemd/system directory','by isolating this service'], ans:1, hint:'يتم إنشاء want لخدمة من خلال إنشاء رابط رمزي في /etc/systemd/system، مثل /etc/systemd/system/target.wants/service.service، الذي يعبر عن تبعية ضعيفة (weak dependency) تجعل الخدمة تُشغل تلقائيًا عند تفعيل الـ target دون إجبارها.'},
+  {type:'mcq', q:'How do you switch the current operational target to the rescue target?', choices:['target rescue.target start','systemctl resc.target','systemctl isolate rescue.target'], ans:2, hint:'الأمر systemctl isolate rescue.target يعزل النظام إلى rescue target، مما يوقف الـ targets الحالية ويبدأ فقط الخدمات الأساسية للإصلاح (مثل root shell)، وهو مفيد في حالات الطوارئ لاستعادة النظام دون تداخل الخدمات الأخرى.'},
+  {type:'mcq', q:'Why can it happen that you get the message that a target cannot be isolated?', choices:['if set AllowIsolate is not set to yes in their configuration file','if systemctl command is not available','if the target is already running'], ans:0, hint:'يحدث خطأ عدم إمكانية عزل الـ target إذا لم يكن AllowIsolate=yes محددًا في ملف الوحدة (unit file)، حيث يمنع هذا الإعداد التبديل التلقائي إلى الـ target لأسباب أمان، مما يتطلب تعديل الملف يدويًا للسماح بالعزل.'},
+  {type:'mcq', q:'You want to shut down a systemd service, but before doing that you want to know which other units have dependencies to this service. Which command would you use?', choices:['systemctl list-dependencies service'], ans:0, hint:'الأمر systemctl list-dependencies service يعرض شجرة التبعيات (dependencies) للوحدة، بما في ذلك الوحدات التي تعتمد عليها أو التي تعتمد عليها، مما يساعد في فهم التأثير قبل إيقاف الخدمة وتجنب تعطيل الخدمات المتعلقة.'},
+  {type:'mcq', q:'Which command shows all service unit files on your system that are currently loaded?', choices:['systemctl --type=service','systemctl --type=service --all','systemctl --list-services','systemctl --show-units | grep services'], ans:1, hint:'الأمر systemctl --type=service --all يعرض جميع ملفات وحدات الخدمات المحملة، بما في ذلك النشطة والغير نشطة، مما يوفر نظرة شاملة على حالة الخدمات في systemd، وهو أكثر شمولاً من --type=service الذي يظهر النشطة فقط.'},
+  {type:'mcq', q:'What is the best solution to avoid conflicts between incompatible units?', choices:['Nothing, the unit files have defined for themselves which units they are not compatible with.','Disable the service using systemctl disable.','Unmask the service using systemctl unmask.','Mask the service using systemctl mask.'], ans:3, hint:'الأفضل هو استخدام systemctl mask للخدمة، الذي ينشئ رابطًا رمزيًا إلى /dev/null، مما يمنع تشغيلها تمامًا حتى لو تم تمكينها، وهذا يحل التعارضات بين الوحدات غير المتوافقة دون الحاجة إلى تعطيلها جزئيًا.'},
+  {type:'mcq', q:'Which of the following is not a valid status for systemd services?', choices:['Running(active)','Running(exited)','Running(waiting)','Running(dead)'], ans:3, hint:'Running(dead) غير صالح كحالة للخدمات في systemd، حيث تشير الحالات الـ Running إلى active، exited (انتهت المهمة)، أو waiting (تنتظر إشارة)، بينما dead تعني توقفًا كاملاً وليست تحت Running.'},
+  {type:'mcq', q:'To allow targets to be isolated, you need a specific statement in the target unit file. Which of the following describes that statement?', choices:['AllowIsolate','Isolate','SetIsolate','Isolated'], ans:0, hint:'الإفادة AllowIsolate=yes في ملف الـ target unit تسمح بعزل الـ target باستخدام systemctl isolate، مما يجعلها هدفًا صالحًا للتبديل التلقائي، وهي ضرورية لأهداف مثل multi-user أو graphical لضمان الأمان والتحكم.'},
+  {type:'mcq', q:'Which of the following is not a valid systemd unit type?', choices:['service','udev','mount','socket'], ans:1, hint:'udev ليس نوعًا صالحًا للوحدات في systemd، حيث تشمل الأنواع الرئيسية service (للخدمات)، mount (لنقاط التركيب)، وsocket (للمنافذ)، بينما udev هو مدير أجهزة يُدار كخدمة منفصلة.'},
+  {type:'mcq', q:'Which command shows all service unit files on your system that are currently loaded?', choices:['systemctl --type=service','systemctl --type=service --all','systemctl --list-services','systemctl --show-units | grep services'], ans:1, hint:'الأمر systemctl --type=service --all يعرض جميع ملفات وحدات الخدمات المحملة، سواء نشطة أو غير، مما يساعد في التحقق من التوافر الكامل للخدمات في النظام.'},
+  {type:'mcq', q:'What is the best solution to avoid conflicts between incompatible units?', choices:['Nothing, the unit files have defined for themselves which units they are not compatible with.','Disable the service using systemctl disable.','Unmask the service using systemctl unmask.','Mask the service using systemctl mask.'], ans:3, hint:'استخدام systemctl mask يُخفي الخدمة تمامًا بربطها بـ /dev/null، مما يمنع أي محاولة لتشغيلها ويحل التعارضات بفعالية، خاصة بين الوحدات غير المتوافقة.'},
+  {type:'mcq', q:'Which of the following is not a valid status for systemd services?', choices:['Running(active)','Running(exited)','Running(waiting)','Running(dead)'], ans:3, hint:'Running(dead) غير صالح، لأن dead هي حالة منفصلة تعني التوقف الكامل، بينما Running تشمل active (جارية)، exited (انتهت)، أو waiting (منتظرة).'},
+  {type:'mcq', q:'To allow targets to be isolated, you need a specific statement in the target unit file. Which of the following describes that statement?', choices:['AllowIsolate','Isolate','SetIsolate','Isolated'], ans:0, hint:'AllowIsolate=yes هو الإفادة المطلوبة في ملف الـ target للسماح بالعزل، مما يضمن أن الـ target يمكن تبديله بأمان دون مخاطر.'},
+  {type:'mcq', q:'Which of the following is not a valid systemd unit type?', choices:['service','udev','mount','socket'], ans:1, hint:'udev ليس نوع وحدة systemd قياسيًا، بل هو خدمة لإدارة الأجهزة، بينما service، mount، وسocket هي أنواع أساسية للوحدات.'},
+  {type:'mcq', q:'Which command shows all service unit files on your system that are currently loaded?', choices:['systemctl --type=service','systemctl --type=service --all','systemctl --list-services','systemctl --show-units | grep services'], ans:1, hint:'systemctl --type=service --all هو الأمر الشامل لعرض جميع الخدمات المحملة.'},
+  {type:'mcq', q:'What is the best solution to avoid conflicts between incompatible units?', choices:['Nothing, the unit files have defined for themselves which units they are not compatible with.','Disable the service using systemctl disable.','Unmask the service using systemctl unmask.','Mask the service using systemctl mask.'], ans:3, hint:'Masking بـ systemctl mask يحظر التشغيل تمامًا ويمنع التعارضات.'},
+  {type:'mcq', q:'Which of the following is not a valid status for systemd services?', choices:['Running(active)','Running(exited)','Running(waiting)','Running(dead)'], ans:3, hint:'Running(dead) غير صالح كحالة، dead منفصلة عن Running.'},
+  {type:'mcq', q:'To allow targets to be isolated, you need a specific statement in the target unit file. Which of the following describes that statement?', choices:['AllowIsolate','Isolate','SetIsolate','Isolated'], ans:0, hint:'AllowIsolate=yes يسمح بالعزل في ملف الـ unit.'},
+  {type:'mcq', q:'Which of the following is not a valid systemd unit type?', choices:['service','udev','mount','socket'], ans:1, hint:'udev ليس نوعًا، بل خدمة.'},
+  {type:'mcq', q:'How do you install a new version of the kernel?', choices:['yum update','yum update kernel','yum kernel install'], ans:1, hint:'الأمر yum update kernel يقوم بتحديث النواة (kernel) إلى الإصدار الجديد المتاح في المستودعات، مما يثبت الإصدارات الأحدث تلقائيًا مع التبعيات اللازمة مثل initramfs، ثم يتطلب إعادة تشغيل للتفعيل.'},
+  {type:'mcq', q:'Which command enables you to discover kernel module parameters?', choices:['lsmod','modinfo','modprob'], ans:1, hint:'modinfo يُستخدم لاستكشاف معاملات الوحدات (modules) في النواة، مثل modinfo module_name، الذي يعرض الوصف، المعاملات المتاحة، والتبعيات، مما يساعد في تخصيص سلوك الوحدة دون تعديل الكود.'},
+  {type:'mcq', q:'How do you unload a kernel module?', choices:['modprobe -r','lsmod -r','modinfo'], ans:0, hint:'modprobe -r module_name يقوم بإزالة الوحدة من النواة إذا لم تكن مستخدمة، مما يحرر الذاكرة ويمنع التداخلات، ويجب التحقق أولاً بـ lsmod للتأكد من عدم الاستخدام النشط.'},
+  {type:'mcq', q:'It contains drivers that are needed to start your server.', choices:['initramfs','grub2','systemd'], ans:0, hint:'initramfs (Initial RAM File System) هو نظام ملفات مؤقت في الذاكرة يحتوي على الدرايفرات الأساسية اللازمة لتحميل نظام الملفات الجذر، مما يسمح ببدء التشغيل حتى لو كانت الأقراص غير متاحة مباشرة.'},
+  {type:'mcq', q:'Setting the GRUB_TIMEOUT parameter to 10, will?', choices:['Restart the system after 10 seconds.','Boot the system into the default kernel after 10 seconds.','Shutdown the system after 10 seconds.'], ans:1, hint:'إعداد GRUB_TIMEOUT=10 يعني عرض قائمة GRUB لمدة 10 ثوانٍ قبل التحميل التلقائي إلى النواة الافتراضية، مما يتيح للمستخدم اختيار نواة أخرى إذا لزم الأمر، ويُعدل في /etc/default/grub ثم يُعاد توليد grub.cfg.'},
+  {type:'mcq', q:'You can apply permanent fixes to the GRUB 2 configuration using the option:', choices:['GRUB_CMDLINE_LINUX','GRUB_TIMEOUT','GRUB_RHGB'], ans:0, hint:'GRUB_CMDLINE_LINUX يُستخدم لإضافة معاملات النواة الدائمة في /etc/default/grub، مثل rd.lvm.lv أو quiet، ثم يُعاد توليد /boot/grub2/grub.cfg بـ grub2-mkconfig لتطبيق التغييرات عند كل بدء تشغيل.'},
+  {type:'mcq', q:'To list all installed kernels use :', choices:['lsmod kernel-*','yum installed kernel-*'], ans:1, hint:'yum list installed kernel-* يسرد جميع إصدارات النواة المثبتة، مما يساعد في التحقق من الإصدارات المتاحة للتحديث أو الإزالة، وهو أفضل من lsmod الذي يعرض الوحدات المحملة فقط.'},
+  {type:'tf', q:'True or False: The systemd command may be used to rebuild a new kernel.', ans:false, hint:'خطأ — لا يُستخدم systemd لإعادة بناء النواة؛ بل يُستخدم dracut أو mkinitrd لبناء initramfs الجديد بعد تثبيت نواة جديدة، بينما systemd يدير الخدمات والـ targets فقط.'},
+  {type:'mcq', q:'What is the location of the grub.efi file in the UEFI-based systems?', choices:['/boot/efi/EFI/redhat','/boot/grub2/grub.cfg','/bin/efi/EFI/redhat'], ans:0, hint:'في أنظمة UEFI، يُخزن grub.efi في /boot/efi/EFI/redhat، حيث يُشير EFI firmware إليه كملف بدء تشغيل، مما يدعم التحميل الآمن (Secure Boot) ويختلف عن BIOS الذي يستخدم MBR.'},
+  {type:'mcq', q:'What is the location of the grub.cfg file in the BIOS-based systems?', choices:['/boot/efi/EFI/redhat','/boot/grub2/grub.cfg','/bin/efi/EFI/redhat'], ans:1, hint:'في أنظمة BIOS، يُخزن grub.cfg في /boot/grub2/grub.cfg، وهو الملف الرئيسي الذي يحتوي على تكوين قائمة التحميل، ويُولد تلقائيًا من /etc/grub.d/ عبر grub2-mkconfig.'},
+  {type:'mcq', q:'Which file stores the location information of the boot partition on the BIOS systems?', choices:['/boot/bios','grub.conf','/proc/partition'], ans:1, hint:'grub.conf (أو menu.lst في إصدارات قديمة) يخزن معلومات موقع قسم البدء في أنظمة BIOS، ويُستخدم كمصدر لتوليد grub.cfg، مما يساعد GRUB في العثور على النواة والـ initramfs.'},
+  {type:'mcq', q:'Which file would we want to view to obtain processor information?', choices:['/proc/cpuinfo','/proc/meminfo','/proc/partition'], ans:0, hint:'/proc/cpuinfo يحتوي على تفاصيل المعالج مثل النوع، السرعة، عدد النوى، والعلامات، وهو ملف افتراضي في نظام الملفات الافتراضي /proc الذي يعرض معلومات النواة ديناميكيًا دون قراءة ملفات ثابتة.'},
+  {type:'mcq', q:'Which file would we want to view to obtain memory information?', choices:['/proc/cpuinfo','/proc/meminfo','/proc/partition'], ans:1, hint:'/proc/meminfo يعرض إحصائيات الذاكرة مثل الكمية الإجمالية، المستخدمة، المتاحة، والمخزن مؤقت، مما يساعد في مراقبة استخدام الذاكرة في الوقت الفعلي عبر cat أو free.'},
+  {type:'mcq', q:'Which command can we use to determine the kernel release information?', choices:['kernel-release','dmesg','uname -r'], ans:2, hint:'uname -r يعرض إصدار النواة الحالي (مثل 3.10.0-123.el7.x86_64)، مما يساعد في التحقق من التوافق مع البرمجيات أو التحديثات، وهو أسرع من dmesg الذي يسجل الرسائل التشخيصية.'},
+  {type:'tf', q:'True or False: The lsmod command is used to rebuild modules.', ans:false, hint:'خطأ — lsmod يُستخدم لسرد الوحدات المحملة في النواة حاليًا مع تبعياتها، بينما إعادة بناء الوحدات تتم عبر make modules_install أو yum rebuild.'},
+  {type:'mcq', q:'Which command can we use to unload a module?', choices:['modprobe','lsmod','modinfo'], ans:0, hint:'modprobe -r module يزيل الوحدة إذا لم تكن مستخدمة، مما يحرر الموارد، ويجب التحقق أولاً بـ lsmod لتجنب الأخطاء.'},
+  {type:'tf', q:'True or False: We cannot use the yum command to upgrade a Linux kernel.', ans:false, hint:'صحيح — يمكن استخدام yum update kernel لترقية النواة، مما يثبت الإصدار الجديد تلقائيًا، ثم يتطلب إعادة تشغيل للتبديل إليها عبر GRUB.'},
+  {type:'mcq', q:'Which configuration file should you modify to apply common changes to GRUB 2?', choices:['/boot/grub2/grub.cfg','/etc/grub.cfg','/grub2/grub.config'], ans:0, hint:'لا، يُفضل تعديل /etc/default/grub أو إضافة ملفات في /etc/grub.d/ للتغييرات الشائعة، ثم تشغيل grub2-mkconfig -o /boot/grub2/grub.cfg لتوليد الملف الرئيسي، تجنب تعديل grub.cfg مباشرة لأنه يُعاد توليده.'},
+  {type:'mcq', q:'After applying changes to GRUB 2 configuration, which command should you run?', choices:['modprobe','mkconfig','grub2-mkconfig'], ans:2, hint:'grub2-mkconfig -o /boot/grub2/grub.cfg يُعاد توليد ملف التكوين الرئيسي بناءً على /etc/default/grub و /etc/grub.d/، مما يطبق التغييرات الدائمة عند البدء في التشغيل.'},
+  {type:'mcq', q:'Which command shows a list of kernel modules that are currently loaded?', choices:['lsmod','modprobe','modinfo'], ans:0, hint:'lsmod يسرد الوحدات المحملة مع استخدامها وتبعياتها، مما يساعد في تشخيص المشكلات أو التحقق من الدرايفرات النشطة.'},
+  {type:'mcq', q:'If you want to obtain persistency to acl mount option you have to modify the filesystem mount options in:', choices:['/etc/fstab','mount command','fstab command','/etc/inittab'], ans:0, hint:'/etc/fstab هو الملف الذي يحدد خيارات التركيب الدائمة، مثل إضافة acl إلى خيارات mount لتمكين قوائم التحكم في الوصول (ACL) على نظام الملفات، مما يضمن تطبيقها عند كل إعادة تشغيل.'},
+  {type:'mcq', q:'Which of the following commands grants rw permissions for the group sales to all new files that will be created in the /data directory and all of its subdirectories?', choices:['setfacl -m d:g:sales:rw /data','setfacl -m d:g:sales:rwx /data','setfacl -R -m g:sales:rwx /data','setfacl -R -m g:sales:rw /data'], ans:0, hint:'setfacl -m d:g:sales:rw /data يُطبق ACL افتراضي (default) لقراءة/كتابة (rw) على مجموعة sales لجميع الملفات الجديدة في /data وأبنائها، مما يرث الإذن تلقائيًا دون التأثير على الملفات الموجودة.'},
+  {type:'mcq', q:'Which command enables you to make sure that others have no access to any new files that will be created in the /data directory, assuming that you want others to have read permissions on all other files?', choices:['setfacl -m d:o::- /data','setfacl -m o::- /data','umask 027 /data','umask 027'], ans:3, hint:'umask 027 يُعدل قناع الإذن الافتراضي للمستخدم الحالي، مما يمنع الآخرين (others) من الوصول إلى الملفات الجديدة (rw-r-----)، وهو يُطبق عالميًا على الجلسة دون الحاجة إلى ACL للإذن البسيط.'},
+  {type:'mcq', q:'What would the command setfacl –m u::7,g::4,o:4,u:user3:7 file do?', choices:['assign rwx permissions to file owner and user3, and read-only permission to everyone else.','assign rw permissions to file owner and user3, and read-only permission to everyone else.','assign rwx permissions to file owner and user, and read-only permission to everyone else.','assign r-x permissions to file owner and user3, and read-only permission to everyone else.'], ans:0, hint:'setfacl -m u::7,g::4,o:4,u:user3:7 file يمنح rwx (7) للمالك وuser3، r-- (4) للمجموعة، وr-- (4) للآخرين، مما يوسع الإذن التقليدي بإضافة ACL لمستخدم محدد دون تغيير الإذن الأساسي.'},
+  {type:'mcq', q:'When recalculating the ACL mask value after a setfacl command, it’s done by:', choices:['getting the minimum permissions of the acceptable acl entries.','getting the intersection permissions of the acceptable acl entries.','getting the maximum permissions of the acceptable acl entries.','getting the last used permissions of the acceptable acl entries.'], ans:0, hint:'يتم إعادة حساب قناع ACL (mask) بأخذ الحد الأدنى من الإذن بين المدخلات المسموحة (named entries)، مما يحد من الإذن الفعال لضمان عدم تجاوز الحدود المحددة في ACL.'},
+  {type:'mcq', q:'To change the ACL mask to grant read and write permissions on a directory d1 use:', choices:['setfacl -m mask:r d1','setfacl -m mask:rw d1','setfacl -x mask:rw d1','setfacl -m mask:rw d1'], ans:3, hint:'setfacl -m m:rw d1 (أو mask:rw) يُعدل القناع ليسمح برو (read/write) كحد أقصى للمدخلات الأخرى، مما يوسع الإذن الفعال دون تغيير الإذن الأساسي.'},
+  {type:'mcq', q:'To remove all ACL entries defined on a file we use:', choices:['setfacl -b','setfacl -x','setfacl -m','setfacl -z'], ans:0, hint:'setfacl -b file يزيل جميع مدخلات ACL (باستثناء الإذن الأساسي)، مما يعيد النظام إلى الإذن التقليدي (owner/group/others)، وهو مفيد لتنظيف ACL غير المرغوب.'},
+  {type:'mcq', q:'To set the default ACL permissions to read and execute to a group named g1 on a files in directory d1 use:', choices:['setfacl -m d:g:g1:rx d1/*','setfacl -d m:g:g1:rx d1/*','setfacl -m d:g:g1:rx d1/','setfacl -d m:g:g1:rx d1/'], ans:2, hint:'setfacl -m d:g:g1:rx d1/ يُطبق ACL افتراضي لقراءة/تنفيذ (rx) على مجموعة g1 للملفات الجديدة في d1، مما يرث الإذن للأبناء، ويُطبق على الدليل نفسه لا الملفات الموجودة.'},
+  {type:'tf', q:'True or False: Setting a default ACL, you’ll determine the permissions that will be set for all items in the directory.', ans:true, hint:'صحيح — ACL الافتراضي (default ACL) يحدد الإذن لجميع العناصر الجديدة (ملفات وأدلة فرعية) في الدليل، مما يرث تلقائيًا لضمان التوافق مع سياسات الأمان.'},
+  {type:'tf', q:'True or False: Setting a default ACL can be applied on files as well as on directories.', ans:false, hint:'خطأ — ACL الافتراضي يُطبق فقط على الأدلة (directories) للوراثة، بينما على الملفات يُستخدم ACL عادي (-m) للإذن المباشر دون وراثة.'},
+  {type:'mcq', q:'A specific part of the policy that determines which source domain has which access permissions to which target domain.', choices:['Context','Labels','Rule','sub Policy'], ans:2, hint:'Rule في سياسة SELinux هو الجزء الذي يحدد الإذن بين نطاق المصدر (source domain) ونطاق الهدف (target domain)، مثل allow source:target action، مما يشكل أساس السياسة الأمنية.'},
+  {type:'mcq', q:'A security label that is used to categorize objects in SELinux.', choices:['Context','Labels','Rule','Policy'], ans:1, hint:'Labels (أو contexts) هي علامات أمنية في SELinux تُصنف الكائنات (مثل user:role:type:level)، مما يساعد في تطبيق السياسات بناءً على السياق بدلاً من الإذن التقليدي.'},
+  {type:'mcq', q:'Which of the following is not a valid SELinux mode?', choices:['Enforcing','Permissive','Disabled','Enabled'], ans:3, hint:'Enabled ليس وضعًا صالحًا في SELinux؛ الوضع الصالحة هي Enforcing (يحظر والتسجيل)، Permissive (يسجل فقط)، وDisabled (معطل تمامًا).'},
+  {type:'mcq', q:'Which of the following commands enables you to see the current SELinux mode?', choices:['sestatus','lsmode','semode','getenforce'], ans:0, hint:'sestatus يعرض الوضع الحالي لـ SELinux، السياسة، والسياقات، مما يوفر نظرة شاملة مقارنة بـ getenforce الذي يعرض الوضع فقط.'},
+  {type:'mcq', q:'You want to put SELinux temporarily in permissive mode. Which command do you use?', choices:['setenforce enforcing','setenforce permissive','getenforce permissive','getenforce permissive'], ans:1, hint:'setenforce permissive يُغير الوضع مؤقتًا إلى permissive (يسجل الانتهاكات دون حظر)، وهو مفيد للاختبار، ويُعاد إلى enforcing بـ setenforce 1 أو إعادة تشغيل.'},
+  {type:'mcq', q:'To which of the following can SELinux security not be applied?', choices:['Users','Files','Ports','It can be applied to all of the above.'], ans:3, hint:'SELinux يُطبق على المستخدمين، الملفات، المنافذ، والمزيد، مما يوفر حماية شاملة للعمليات والموارد في النظام.'},
+  {type:'mcq', q:'Which command-line switch is used with many commands to display SELinux-related information?', choices:['-S','-X','-Z','-D'], ans:2, hint:'-Z (أو --context) مع أوامر مثل ps أو ls يعرض سياق SELinux للعمليات أو الملفات، مما يساعد في التحقق من التسميات الأمنية.'},
+  {type:'mcq', q:'Which file do you need to change if you want to completely disable SELinux?', choices:['/etc/selinux/config','/var/log/selinux/','/selinux/config','/etc/selinux.conf'], ans:0, hint:'/etc/selinux/config يحتوي على SELINUX=disabled لتعطيل SELinux دائمًا، ثم يتطلب إعادة تشغيل، مع الحرص على إعادة تسمية الملفات إذا لزم.'},
+  {type:'mcq', q:'Which command can be used to ensure modified SELinux contexts survive file system relabeling?', choices:['chcon','semanage','setenforce','getenforce'], ans:1, hint:'semanage fcontext -a يُضيف سياقًا مخصصًا إلى قاعدة SELinux، مما يضمن بقاء التغييرات أثناء إعادة التسمية (restorecon)، بخلاف chcon الذي يكون مؤقتًا.'},
+  {type:'mcq', q:'Which of the following is not a standard firewalld zone?', choices:['Untrusted','Trusted','External','Internal'], ans:0, hint:'Untrusted ليست منطقة قياسية في firewalld؛ المناطق القياسية تشمل Trusted (ثقة كاملة)، Internal (شبكة داخلية)، وExternal (شبكة خارجية مع NAT).'},
+  {type:'mcq', q:'Which of the following is the name of firewalling as implemented in the Linux kernel?', choices:['iptables','firewalld','netfilter','firewall-mod'], ans:2, hint:'netfilter هو الإطار في نواة Linux لتصفية الحزم، بينما iptables/firewalld هما واجهات مستخدمة لإدارته، مما يوفر hooks للمعالجة في طبقات الشبكة.'},
+  {type:'mcq', q:'Which of the following is not an advantage of firewalld?', choices:['Rules can be modified through dbus.','It has an easy to use command-line interface.','It has an easy to use graphical interface.','It can be used as an enhancement to iptables.'], ans:3, hint:'firewalld ليس تحسينًا لـ iptables بل بديلاً له، حيث يدير الإعدادات الديناميكية عبر zones وservices، مع دعم dbus للتكامل مع التطبيقات.'},
+  {type:'mcq', q:'Which command enables you to list all available firewalld services?', choices:['firewall-cmd --list-services','firewall-cmd --list-all','firewall-cmd --get-services','firewall-cmd --show-services'], ans:2, hint:'firewall-cmd --get-services يسرد جميع الخدمات المتاحة في firewalld، مثل http وssh، مما يساعد في إضافة خدمات إلى المناطق دون البحث اليدوي.'},
+  {type:'mcq', q:'What is the name of the GUI tool that enables you to easily manage firewalld configurations?', choices:['system-config-firewall','firewall-gtk','firewall-config','firewall-gui'], ans:2, hint:'firewall-config هو أداة GUI لإدارة firewalld، تسمح بتعديل المناطق والخدمات بصريًا، مشابهة لـ firewall-cmd لكن مع واجهة رسومية سهلة.'},
+  {type:'mcq', q:'What is the name of the CLI tool that enables you to easily manage firewalld configurations?', choices:['system-config-firewall','firewall-cmd','firewall-config'], ans:1, hint:'firewall-cmd هو أداة سطر الأوامر لإدارة firewalld، تدعم خيارات مثل --add-service و--zone للتكوين الديناميكي دون إعادة تشغيل الخدمة.'},
+  {type:'mcq', q:'Which zones should you use for an interface that is on a network where you need minimal firewall protection because every other computer on that same network is trusted?', choices:['Trusted','Home','external','Private'], ans:0, hint:'Trusted zone تمنح حماية دنيا (تسمح بكل الاتصالات الواردة)، مثالية لشبكات داخلية موثوقة حيث لا حاجة لتصفية، بخلاف Home أو Private التي تحد من الوصول.'},
+  {type:'mcq', q:'Which of the following statements is true about the --permanent command line option when used with firewall-cmd?', choices:['Configuration that is added using --permanent is activated immediately and will be activated automatically after (re)starting firewalld.','Configuration that is added using --permanent is activated immediately.','Configuration that is added using --permanent is not activated immediately and can be activated only by using systemctl restart firewalld.','To activate configuration that has been added with the –permanent option, you need to reload the firewall configuration by using firewall-cmd –reload .'], ans:3, hint:'--permanent يحفظ التكوين دائمًا في /etc/firewalld لكنه لا يفعله فورًا؛ يتطلب firewall-cmd --reload للتفعيل دون إعادة تشغيل، مما يحافظ على الجلسة الحالية.'},
+  {type:'mcq', q:'Which command enables you to get an overview of all the current firewall configurations for all zones?', choices:['firewall-cmd --show-current','firewall-cmd --list-all','firewall-cmd --list-current','firewall-cmd --show-all'], ans:1, hint:'firewall-cmd --list-all-zones يعرض نظرة عامة على تكوينات جميع المناطق، بما في ذلك الخدمات والمنافذ، مما يساعد في التدقيق الشامل.'},
+  {type:'tf', q:'True or False: Iptables is a packet-filtering firewall.', ans:true, hint:'صحيح — iptables هو جدار ناري لتصفية الحزم (packet-filtering) يعمل مع netfilter في النواة، يحدد قواعد لقبول/رفض/تعديل الحزم بناءً على الرؤوس مثل IP وports.'},
+  {type:'mcq', q:'When the firewalld service is used for managing the firewall, a couple of services should never be running on your server. What services should not be running when you are using firewalld?', choices:['iptables','ebtables','ip6tables','network'], ans:0, hint:'iptables يجب ألا يعمل مع firewalld لأنه يدير نفس netfilter، مما يسبب تعارضات؛ أوقفه بـ systemctl stop iptables للسماح لـ firewalld بالسيطرة الكاملة.'},
+  {type:'mcq', q:'In a firewalld configuration, you can use different building blocks. These building blocks are processed in a specific order, and are shown in the following list. Which answer lists their correct order? 1. Deny rules 2. Logging rules 3. Direct rules 4. Allow rules 5. Port forwarding and masquerading rules', choices:['3, 5, 2, 4, 1','5, 3, 2, 4, 1','3, 5, 4, 1, 2','2, 1, 5, 3, 4'], ans:0, hint:'الترتيب الصحيح هو Direct rules (3)، Port forwarding/masquerading (5)، Logging (2)، Allow (4)، Deny (1)، مما يعالج الحزم خطوة بخطوة لضمان التصفية الفعالة.'},
+  {type:'mcq', q:'Which of the following is the typical location for custom firewalld service files?', choices:['/etc/systemd/system','/usr/lib/firewalld/services','/etc/firewalld/services','/etc/firewalld'], ans:2, hint:'/etc/firewalld/services هو الموقع النموذجي لملفات الخدمات المخصصة (.xml)، حيث تُنسخ من /usr/lib/ وتُعدل، مما يتجنب الكتابة فوق الملفات الافتراضية أثناء التحديثات.'},
+  {type:'mcq', q:'Which of the following cannot be configured using firewalld rich rules?', choices:['Logging','Filtering based on one specific IP address instead of all IP addresses assigned to a zone','Custom port allocations','Rate limiting'], ans:2, hint:'تخصيص المنافذ (custom ports) يتم عبر services أو direct rules، لا rich rules التي تركز على التصفية المتقدمة مثل IP محدد أو rate limiting.'},
+  {type:'mcq', q:'The basic syntax of a rich rule is as follows: Rule - [source] [destination] - {service|port|protocol|icmp-block|masquerade|forward-port} [log] [audit] [accept|reject|drop]', choices:['True','False'], ans:0, hint:'صحيح — الصيغة الأساسية لـ rich rule هي rule [source address] [dest address] [service/port/protocol/icmp-block/masquerade/forward-port] [log/audit] [accept/reject/drop]، مما يسمح بقواعد دقيقة في firewalld.'},
+  {type:'mcq', q:'Lists all rich rules for the default zone or for the zone that is specified as an argument.', choices:['--query-rich-rule=\'<RULE>\'','--list-rich-rules=\'<RULE>\'','--list-rich-rules','--query-rich-rule'], ans:2, hint:'firewall-cmd --list-rich-rules يسرد جميع rich rules في المنطقة الافتراضية أو المحددة، مما يساعد في التحقق من القواعد المتقدمة.'},
+  {type:'mcq', q:'For use on computers in the demilitarized zone. Only selected incoming connections are accepted, and limited access to the internal network is allowed.', choices:['Dmz','Drop','External','Home'], ans:0, hint:'Dmz zone مخصصة للمنطقة المُعزلة (demilitarized zone)، تسمح ببعض الاتصالات الواردة مثل HTTP مع حماية الشبكة الداخلية.'},
+  {type:'mcq', q:'What from the following isn’t in the Firewalld services configuration files', choices:['Service ID','Port','Protocol','Short description'], ans:0, hint:'Service ID ليس موجودًا في ملفات .xml للخدمات؛ يحتوي على short description، port، protocol، مما يحدد كيفية التعامل مع الخدمة في المناطق.'},
+  {type:'mcq', q:'To remove a service from the firewalld configuration:', choices:['--erase-service=<service-name>','--delete-service=<service-name>','--remove-service=<service-name>','--disable-port=<service-name>'], ans:2, hint:'firewall-cmd --remove-service=<service> --zone=<zone> يزيل الخدمة من المنطقة، مما يمنع الوصول إليها مؤقتًا أو دائمًا حسب --permanent.'},
+  {type:'mcq', q:'To create a service configuration file:', choices:['Copy and modify a template file from /usr/lib/firewalld/services.','Use the firewall-cmd --add-service command.','Use the firewall-cmd --new-service command.','Rename and customize a template file in /usr/lib/firewalld/services.'], ans:0, hint:'انسخ وقم بتعديل قالب من /usr/lib/firewalld/services إلى /etc/firewalld/services لإنشاء خدمة مخصصة، ثم أعد تحميل firewalld للتفعيل.'},
+  {type:'tf', q:'True or False: The NTP client is pre-configured when the ntp software is installed on the system. We just need to start the service to begin synchronizing the clock.', ans:false, hint:'خطأ — في RHEL7، chrony هو العميل الافتراضي لـ NTP، وليس ntp؛ بعد تثبيت chrony، قم بتمكين chronyd لمزامنة الساعة تلقائيًا مع الخوادم.'},
+  {type:'mcq', q:'Which command may we use to display the hardware address of a network interface?', choices:['ip','ip link show','ipconfig'], ans:1, hint:'ip link show يعرض عنوان الجهاز (MAC address) للواجهات الشبكية، بالإضافة إلى الحالة والسرعة، وهو بديل حديث لـ ifconfig.'},
+  {type:'mcq', q:'In which directory does the Network Manager store the interface configuration files?', choices:['/etc/sysconfig/network','/etc/network','/etc/sysconfig/network-scripts'], ans:2, hint:'/etc/sysconfig/network-scripts يحتوي على ملفات ifcfg-<interface> لتكوين NetworkManager، مثل IP، DNS، وONBOOT، مما يدير الواجهات تلقائيًا.'},
+  {type:'mcq', q:'What is the purpose of the ONBOOT directive in the interface configuration file?', choices:['activate this interface on boot','add the interface to grub','configure interface to use dhcp on boot'], ans:0, hint:'ONBOOT=yes يفعل الواجهة الشبكية عند بدء التشغيل، مما يضمن توافر الشبكة فورًا، بغض النظر عن DHCP أو IP ثابت.'},
+  {type:'tf', q:'True or False: The /etc/hosts file maintains the hostname to hardware address mappings.', ans:false, hint:'خطأ — /etc/hosts يربط الأسماء بالعناوين IP (hostname to IP)، لا بالعناوين الجهازية (MAC)؛ لـ MAC استخدم arp أو ip neigh.'},
+  {type:'mcq', q:'What would the ip addr command produce?', choices:['information about interfaces including IP and hardware address','ip address information','number of interfaces'], ans:0, hint:'ip addr يعرض معلومات الواجهات بما في ذلك IP، MAC، والحالة، مما يوفر نظرة شاملة على التكوين الشبكي.'},
+  {type:'mcq', q:'Which command shows the recommended way to display information about the network interface as well as its IP configuration?', choices:['ifconfig -all','ipconfig','ip link show','ip addr show'], ans:3, hint:'ip addr show هو الطريقة الموصى بها لعرض تفاصيل الواجهة والـ IP، كبديل حديث لـ ifconfig.'},
+  {type:'mcq', q:'Which statement about NetworkManager is not true?', choices:['It is safe to disable NetworkManager and work with the network service instead.','NetworkManager manages network connections that are applied to network interfaces.','NetworkManager has a text based user interface with the name nmtui.','NetworkManager is the default service to manage networking in RHEL 7.'], ans:0, hint:'ليس آمنًا تعطيل NetworkManager في RHEL7؛ هو الافتراضي لإدارة الاتصالات، وتعطيله يعتمد على network service القديم الذي قد يسبب مشكلات.'},
+  {type:'mcq', q:'Which of the following is not a recommended way to specify which DNS servers to use?', choices:['Edit /etc/resolv.conf','Set the DNS options in /etc/sysconfig/network-scripts/ifcfg-<ID>','Set the DNS server names using nmcli','Use nmtui to set the DNS server names'], ans:0, hint:'لا تُعدل /etc/resolv.conf مباشرة لأن NetworkManager يُعاد كتابتها؛ استخدم ifcfg أو nmcli للإعداد الدائم.'},
+  {type:'mcq', q:'In which configuration file would you set the hostname?', choices:['/etc/sysconfig/networking','/etc/sysconfig/hostname','/etc/hostname','/etc/defaults/hostname'], ans:2, hint:'/etc/hostname يحتوي على اسم المضيف الدائم، ويُقرأ عند البدء، ثم يُطبق بـ hostnamectl set-hostname.'},
+  {type:'mcq', q:'Which service manages networking in RHEL 7?', choices:['networking','NetworkManager','ipnet'], ans:1, hint:'NetworkManager هو الخدمة الافتراضية في RHEL7 لإدارة الشبكات، تدعم الاتصالات التلقائية والـ VPN.'},
+  {type:'mcq', q:'Which command manages networking in RHEL 7?', choices:['nmcli con reload','service net restart','systemctl network start'], ans:0, hint:'nmcli con reload يُعاد تحميل تكوينات الاتصالات في NetworkManager دون إعادة تشغيل.'},
+  {type:'mcq', q:'Which service is used as the default service to synchronize time on RHEL 7?', choices:['timedatectl','ntpd','hwclock','chronyd'], ans:3, hint:'chronyd هو الخدمة الافتراضية لمزامنة الوقت في RHEL7، أفضل من ntpd في الشبكات غير المستقرة.'},
+  {type:'mcq', q:'Which command shows current routing configuration?', choices:['nmcli','ifconfig','ip route show'], ans:2, hint:'ip route show يعرض جدول التوجيه الحالي، بما في ذلك الطرق الافتراضية والشبكات.'},
+  {type:'mcq', q:'Which command enables you to show available NFS mounts on server1?', choices:['showmount','mount -a nfs','mkfs -t nfs'], ans:0, hint:'showmount -e server1 يعرض الـ exports المتاحة على خادم NFS، مما يساعد في التحقق قبل التركيب.'},
+  {type:'mcq', q:'Which command enables you to mount an NFS share that is available on server1:/share?', choices:['mount -a nfs','mount server1:/share /mnt/nfs','mount /mnt/nfs server1:/share'], ans:1, hint:'mount -t nfs server1:/share /mnt يركب مشاركة NFS، مع خيارات مثل rw أو soft للتحكم في السلوك.'},
+  {type:'mcq', q:'Which command can you use to discover SMB mounts on a specific server?', choices:['showmount','smbclient','mount -a smb'], ans:1, hint:'smbclient -L //server يسرد المشاركات المتاحة على خادم SMB، مشابه لـ showmount لـ NFS.'},
+  {type:'mcq', q:'Which package must be installed on an SMB client before you can make an SMB mount?', choices:['smb','nfs-utils','cifs-utils'], ans:2, hint:'cifs-utils يوفر أدوات لتركيب مشاركات SMB/CIFS، مثل mount.cifs للدعم الكامل.'},
+  {type:'mcq', q:'What is the name of the configuration file that contains the vsftpd configuration?', choices:['vsftpd.conf','ftp.conf','/etc/conf/vsftpd'], ans:0, hint:'/etc/vsftpd/vsftpd.conf هو الملف الرئيسي لتكوين vsftpd، يحدد خيارات مثل anonymous_enable وlocal_root.'},
+  {type:'mcq', q:'You type the command showmount -e to display available mounts on an NFS server, but you do not get any result. Which of the following is the most likely explanation?', choices:['The NFS client software is not running.','You are using a UID that does not exist on the server.','SELinux is configured properly.','The firewall does not allow showmount traffic.'], ans:3, hint:'الجدار الناري (مثل firewalld) قد يحظر منفذ 111 (rpcbind) المستخدم لـ showmount، مما يمنع الاستعلام؛ أضف nfs service إلى المنطقة.'},
+  {type:'mcq', q:'You want to log in to an SMB share. Which of the following commands shows correct syntax for doing so?', choices:['mount -o username=sambauser1 //server/share /somewhere','mount -o uname=sambauser1 //server/share /somewhere','mount sambauser1@//server/share /somewhere','mount -o username=sambauser1@//server/share /somewhere'], ans:0, hint:'mount -t cifs -o username=sambauser1 //server/share /mnt يحدد اسم المستخدم للمصادقة، مع إمكانية إضافة password أو domain.'},
+  {type:'mcq', q:'The classical way of sharing files between UNIX and Linux hosts is', choices:['samba','NFS','anonymous','Auto.master'], ans:1, hint:'NFS (Network File System) هو الطريقة الكلاسيكية لمشاركة الملفات بين UNIX/Linux، يدعم الوصول الشفاف كما لو كانت محلية.'},
+  {type:'mcq', q:'Which of the following statements is not true about NFS?', choices:['NFS 4 is the default version on RHEL 7','Any shared folder should be added to the /etc/exports file','Used for sharing files between Windows and Linux','NFS4 offers some interesting enhancements'], ans:2, hint:'NFS مخصص لـ UNIX/Linux، لا Windows؛ لـ Windows استخدم Samba، بينما NFSv4 الافتراضي في RHEL7 يدعم أمانًا محسنًا وstateful operations.'},
+  {type:'mcq', q:'A client that has access to several NFS shares on specific server no longer has to mount every individual mount but may perform a root mount by using:', choices:['Pseudo root mounts','Kerberos security','Simplified firewalling','complicated firewalling'], ans:0, hint:'Pseudo root mounts تسمح بتركيب جذر وهمي (مثل /mnt/server) يشمل جميع الـ exports، مما يبسط الوصول دون تركيبات متعددة.'},
+  {type:'tf', q:'True or False: NFS was designed to use host-based security only.', ans:true, hint:'صحيح — NFS الأساسي يعتمد على أمان المضيف (host-based) عبر IP أو hostname، لكن NFSv4 يدعم Kerberos للمصادقة المتقدمة.'},
+  {type:'mcq', q:'To create an export, the /etc/exports file has to include:', choices:['NFS clients - file name - export options','directory permissions - NFS clients - export options','directory name - NFS clients - export options','directory name - Samba clients - export options'], ans:2, hint:'/etc/exports يحتوي على directory /clients options، مثل /share 192.168.1.0/24(rw,sync)، ثم exportfs -ra للتفعيل.'},
+  {type:'mcq', q:'If you want to grant full access to the user root from an NFS client, use the:', choices:['nfsexport','ro','rw','no_root_squash'], ans:3, hint:'no_root_squash يمنع تحويل root إلى nobody، مما يمنح root كامل الوصول، لكن يُعتبر غير آمن ويُفضل تجنبه.'},
+  {type:'mcq', q:'Required packages on NFS server:', choices:['nfs-utils policycoreutils-python','exports','nfs policycoreutils','utils python'], ans:0, hint:'nfs-utils يوفر أدوات NFS، وpolicycoreutils-python لـ SELinux contexts، مما يضمن التصدير الآمن.'},
+  {type:'mcq', q:'This option ensures that modified files are committed to the remote file system immediately.', choices:['ro','sync','rw','nfs-utils'], ans:1, hint:'sync في /etc/exports يضمن كتابة التغييرات فورًا إلى الخادم، مما يقلل من خطر فقدان البيانات لكنه يبطئ الأداء.'},
+  {type:'mcq', q:'Two different kinds of automount maps:', choices:['simple and complicated','direct and indirect','mount and automount','sync and async'], ans:1, hint:'Direct maps تركب مسارات محددة (مثل /share)، indirect تركب تحت جذر (/net/server)، مما يدعم التركيب التلقائي عبر autofs.'},
+  {type:'mcq', q:'Samba client packages are:', choices:['cifs-samba','client-samba','cifs-utils','samba'], ans:2, hint:'cifs-utils للعملاء SMB، يوفر mount.cifs للوصول إلى مشاركات Windows، بينما samba للخادم.'},
+  {type:'tf', q:'True or False: On an FTP server configuration, if anonymous_enable is set to NO anonymous login will be enabled.', ans:false, hint:'خطأ — anonymous_enable=NO يعطل تسجيل الدخول المجهول في vsftpd، مما يتطلب مصادقة للأمان.'},
+  {type:'mcq', q:'The scp command uses the protocal:', choices:['SMB','NFS','SSH','None'], ans:2, hint:'scp يعتمد على SSH لنقل الملفات الآمن، مما يشفر البيانات أثناء النسخ عن بعد.'},
+  {type:'tf', q:'True or False: You can use the rsync utility for remote machines only?', ans:false, hint:'خطأ — rsync يعمل محليًا وremotely عبر SSH أو rsync daemon، مما يجعله متعدد الاستخدامات للنسخ المتزامن.'},
+  {type:'mcq', q:'On default RHEL 7 installation, Which command installs the software packages that are needed to configure an Apache web server?', choices:['yum install httpd','yum install web-server','yum install apache','yum install apache2'], ans:0, hint:'yum install httpd يثبت حزمة Apache (httpd في RHEL)، بما في ذلك الملفات والخدمة، جاهزة للتكوين.'},
+  {type:'mcq', q:'What is the name of the main Apache configuration file?', choices:['/etc/httpd/conf/httpd.conf','/etc/httpd/httpd.conf','/etc/apache2/apache.conf','/etc/httpd/default-server.conf'], ans:1, hint:'/etc/httpd/conf/httpd.conf هو الملف الرئيسي لتكوين Apache، يحدد ServerRoot، DocumentRoot، وModules.'},
+  {type:'mcq', q:'Which parameter in the Apache configuration file is used to specify where Apache will serve its documents from?', choices:['ServerRoot','ServerDocuments','DocumentRoot','DocumentIndex'], ans:2, hint:'DocumentRoot يحدد الدليل الذي يخدم منه Apache الملفات (مثل /var/www/html)، مما يحدد موقع المحتوى الافتراضي.'},
+  {type:'mcq', q:'Which parameter in the main Apache configuration file defines the location where the Apache process looks for its configuration files?', choices:['ServerRoot','ServerDocuments','DocumentRoot','DocumentIndex'], ans:0, hint:'ServerRoot يحدد موقع تثبيت Apache (مثل /etc/httpd)، حيث يبحث عن conf وlogs.'},
+  {type:'mcq', q:'Which directory contains the main Apache configuration file?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:0, hint:'/etc/httpd هو الدليل الرئيسي الذي يحتوي على httpd.conf وأبنائه مثل conf.d.'},
+  {type:'mcq', q:'Which directory contains the configuration files for the different Apache modules?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:3, hint:'/etc/httpd/conf.modules.d يحتوي على تكوينات الوحدات مثل mod_ssl.conf، مُحمّلة تلقائيًا.'},
+  {type:'mcq', q:'Which directory is used to drop configuration files that are installed from RPMs?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:2, hint:'/etc/httpd/conf.d يُستخدم لإسقاط ملفات .conf من RPMs، مُحمّلة مع httpd.conf.'},
+  {type:'mcq', q:'Which virtual host type allows you to run multiple virtual hosts on the same IP address?', choices:['NameBased','IPBased','ConfigurationBased','Default'], ans:0, hint:'NameBased virtual hosts تستخدم Host header لتمييز المواقع على IP واحد، مما يوفر موارد.'},
+  {type:'mcq', q:'Which line is used to start the definition of a virtual host that listens on port 80 of all IP addresses on the current server?', choices:['<VirtualHost *:80>','<VirtualHost *>','<NameHost *:80>','<NameHost *>'], ans:0, hint:'<VirtualHost *:80> يبدأ تعريف الاستضافة الافتراضية على المنفذ 80 لجميع IPs، مع </VirtualHost> للإغلاق.'},
+  {type:'mcq', q:'Which of the following statements about virtual hosts is not true?', choices:['When virtual hosts are offered through an httpd process, the default configuration no longer works.','The names of virtual hosts must be resolvable through /etc/hosts or DNS.','To use virtual hosts, the mod_virt package must be installed.','Virtual host configurations can be specified in httpd.conf.'], ans:2, hint:'لا يوجد mod_virt؛ يتطلب NameVirtualHost أو VirtualHost في httpd.conf، مع DNS للأسماء.'},
+  {type:'mcq', q:'What specifically is the AllowOverride directive used for?', choices:['If set to yes, the contents of a directory can be changed.','This setting is specifically for user home directories. If set to yes, these will be included in the Apache configuration.','If set to yes, the .htaccess file in Apache directories will be considered, which will have a performance price.','Set to yes if you want to allow users to create additional configuration files in directories.'], ans:2, hint:'AllowOverride يسمح بقراءة .htaccess لتخصيصات الدليل، لكن يؤثر على الأداء بسبب الفحص الإضافي لكل طلب.'},
+  {type:'mcq', q:'Which utility enables you to generate a TLS certificate and key for setting up a TLS security Apache web server?', choices:['genkey','openssl','createkey','Sslkey'], ans:1, hint:'openssl req -newkey يولد مفتاحًا وشهادة TLS ذاتية التوقيع لـ Apache، جاهزة لـ SSLCertificateFile.'},
+  {type:'mcq', q:'What is the default directory where the TLS private key is stored?', choices:['/etc/ssl/certs/servername.key','/etc/pki/tls/private/servername.key','/etc/tls/keys/servername.key','/etc/ssl/certs/private/servername.key'], ans:1, hint:'/etc/pki/tls/private/ هو الموقع الافتراضي للمفاتيح الخاصة، محمي بإذن 600 للأمان.'},
+  {type:'mcq', q:'When configuring an Apache server for use of TLS, some directives are generally changed. Which of the following is not typically among them?', choices:['SSLEngine','SSLCertificateFile','SSLCertificateKeyFile','ServerName'], ans:3, hint:'ServerName عام، بينما SSLEngine on، SSLCertificateFile، وSSLCertificateKeyFile خاصة بـ TLS في ssl.conf.'},
+  {type:'mcq', q:'How do you enable the httpd service to be started automatically when Booting?', choices:['systemctl enable httpd','systemctl start httpd','systemctl httpd enable','Service enable httpd'], ans:0, hint:'systemctl enable httpd ينشئ روابط رمزية للتشغيل التلقائي عند البوت، دون بدء فوري.'},
+  {type:'mcq', q:'Which command enables you to test a web server from a server that does not offer a graphical interface?', choices:['scp','ssh','elinks','firefox'], ans:2, hint:'elinks هو متصفح نصي يختبر الويب محليًا أو remotely، مثالي للخوادم بدون GUI.'},
+  {type:'mcq', q:'What is the name of the default Apache configuration file?', choices:['http.conf','apache.conf','httpd.conf','conf.d'], ans:2, hint:'httpd.conf هو الملف الافتراضي الرئيسي لـ Apache في RHEL.'},
+  {type:'mcq', q:'Which command enables you to see whether the Apache web server is currently running?', choices:['systemctl status apache','systemctl apache status','systemctl httpd status','systemctl status httpd'], ans:3, hint:'systemctl status httpd يعرض الحالة، PID، والسجلات الأخيرة للخدمة.'},
+  {type:'mcq', q:'In which directory would you typically find the TLS certificate file and the TLS key?', choices:['/etc/certs/pki','/var/log/certs/','/etc/pki/tls/certs/','/etc/certs/'], ans:2, hint:'/etc/pki/tls/certs/ للشهادات، وprivate/ للمفاتيح، موحد في RHEL.'},
+  {type:'mcq', q:'What is the default configuration file for configuring TLS secured web servers?', choices:['ssl.conf','httpd.conf','apache.conf','http.conf'], ans:0, hint:'ssl.conf في /etc/httpd/conf.d/ مخصص لتكوين TLS، يُحمّل مع httpd.conf.'},
+  {type:'mcq', q:'Which of the following is not a standard component in an LVM setup?', choices:['Logical volume','File system','Volume group','Physical volume'], ans:1, hint:'نظام الملفات (file system) ليس جزءًا من LVM نفسه؛ LVM يدير PV، VG، LV، ثم تُنشأ FS عليها مثل XFS.'},
+  {type:'mcq', q:'Which of the following is not an LVM feature?', choices:['Volume resizing','Hot replacement of failing disk','Copy on write','Snapshots'], ans:1, hint:'استبدال القرص الساخن ليس ميزة LVM أساسية؛ يدعم resizing، COW لـ snapshots، لكن الاستبدال يتطلب إجراءات يدوية.'},
+  {type:'mcq', q:'Which partition type do you need on a GPT partition to mark it with the LVM partition type?', choices:['83','8e','8300','8e00'], ans:2, hint:'8300 هو نوع القسم GPT لـ LVM، يُحدد بـ gdisk أو fdisk للتعرف عليه كـ PV.'},
+  {type:'mcq', q:'Which of the following commands shows correctly how to create a logical volume that uses 50% of available disk space in the volume group?', choices:['vgadd -n lvdata -l +50%FREE vgdata','lvcreate lvdata -l 50%FREE vgdata','lvcreate -n lvdata -l 50%FREE vgdata','lvadd -n lvdata -l 50% FREE /dev/vgdata'], ans:2, hint:'lvcreate -n lvdata -l +50%FREE vgdata ينشئ LV باستخدام 50% من المساحة الحرة في VG، مع + للإضافة.'},
+  {type:'mcq', q:'Which command shows an overview of available physical volumes?', choices:['pvshow','pvdisplay','pvs','Pvlist'], ans:2, hint:'pvs يعرض ملخصًا موجزًا للـ PVs، VG، وPE، مثالي للنظرة السريعة.'},
+  {type:'mcq', q:'Which of the following statements about physical volumes is/are true?', choices:['Partitions should be flagged as LVM partition before assigning them as a physical volume.','Raw disks can be flagged as a physical volume.','Physical volumes can only be created on the Ext4 or XFS file system.','Physical volumes cannot be created on LUNs.'], ans:0, hint:'الأقسام يجب تهيئتها كـ LVM (type 8e/8300) قبل pvcreate، بينما الأقراص الخام والـ LUNs مدعومة.'},
+  {type:'mcq', q:'Which of the following shows correct syntax for creating a volume group?', choices:['vgcreate /dev/vgdata sda1','vgcreate sda1 /dev/vgdata','vgcreate vgdata /dev/sda1','vgcreate vgdata sda1'], ans:3, hint:'vgcreate vgdata /dev/sda1 ينشئ VG باسم vgdata من PV /dev/sda1، مع إمكانية إضافة المزيد.'},
+  {type:'mcq', q:'Which of the following commands would set the extent size that is used when creating a logical volume to a default of 4 MiB?', choices:['pvcreate -s 4M /dev/sda4','vgcreate -s 4M vgdata /dev/sda4','lvcreate -s 4M -L 200M -n lvdata vgdata','lvcreate -x 4M -L 200M -n lvdata vgdata'], ans:1, hint:'vgcreate -s 4M vgdata /dev/sda4 يحدد حجم PE بـ 4MB، يؤثر على كل LVs في VG.'},
+  {type:'mcq', q:'Which of the following is not a likely correct name for the logical volume lvdata that was created in the volume group vgdata?', choices:['/dev/vgdata-lvdata','/dev/vgdata/lvdata','/dev/dm-1','/dev/mapper/vgdata-lvdata'], ans:1, hint:'/dev/vgdata/lvdata غير قياسي؛ الأسماء الصحيحة /dev/mapper/vgdata-lvdata أو /dev/dm-X من device-mapper.'},
+  {type:'mcq', q:'Which of the following commands resizes the logical volume /dev/vgdata/lvdata as well as the file system that is used on top of it, and adds 1GB to the existing volume size?', choices:['lvresize -l +1G -r /dev/vgdata/lvdata','lvresize -L +1G -r /dev/vgdata/lvdata','lvresize -L 1G -r /dev/vgdata/lvdata','lvresize -l 1G -f /dev/vgdata/lvdata'], ans:1, hint:'lvresize -L +1G -r /dev/vgdata/lvdata يزيد الحجم بـ 1GB ويعدل FS تلقائيًا بـ resize2fs أو xfs_growfs.'},
+  {type:'mcq', q:'Which option do you use when using lvextend to make sure that the file system is also resized?', choices:['L','f','r'], ans:2, hint:'-r مع lvextend يُعدل FS تلقائيًا بعد زيادة LV، مما يوفر خطوة إضافية.'},
+  {type:'mcq', q:'This command shows a summary of available volume groups:', choices:['vgs','vgcreate','lvdisplay','Lvextend'], ans:0, hint:'vgs يعرض ملخص VG مع الحجم، PE، والحالة، موجز مثل pvs وlvs.'},
+  {type:'tf', q:'True or False: The physical extent size defines the size of the building blocks used to create logical volumes.', ans:true, hint:'صحيح — PE (Physical Extent) هو الوحدة الأساسية (افتراضي 4MB) لبناء LVs من PVs في VG.'},
+  {type:'mcq', q:'Which command shows a short summary of the physical volumes on your system as well as the volume group to which these belong?', choices:['pvdisplay','lvdisplay','pvcreate','Lvcreate'], ans:0, hint:'pvdisplay يعرض تفاصيل PV مع VG التابع لها، أكثر تفصيلاً من pvs.'},
+  {type:'mcq', q:'What do you need to do to add an entire hard disk /dev/sdd to the volume group vgroup?', choices:['vgextend vggrp /dev/sdb2','vgextend vgdata /dev/sdd','vgextend vgroup /dev/sdd2','vgextend vgroup /dev/sdd'], ans:3, hint:'vgextend vgroup /dev/sdd يضيف القرص كاملاً كـ PV إلى VG، بعد pvcreate إذا لزم.'},
+  {type:'mcq', q:'Which command enables you to create a logical volume lvvol1 with a size of 6MiB?', choices:['lvcreate -s lvvol1 -L 6MB lvvol1','lvcreate -n lvvol1 -L 6MiB vgdata','lvcreate -n lvvol1 -L 6MB lvvol1','lvcreate -s 4M -L 200M -n lvdata'], ans:1, hint:'lvcreate -n lvvol1 -L 6MiB vgdata ينشئ LV بـ 6MB في VG، مع -n للاسم.'},
+  {type:'mcq', q:'How do you show which logical volumes are available?', choices:['lvdisplay','vgdisplay','vgcreate','lvcreate'], ans:0, hint:'lvdisplay يعرض تفاصيل LVs، أو lvs للملخص.'},
+  {type:'mcq', q:'Which command enables you to add 100MB to the logical volume lvvol1, assuming that the disk space is available in the volume group?', choices:['lvresize +100MB -r /dev/mapper/lvvol1','lvresize -L +100MB -r /dev/mapper/lvvol1','lvextend -r 100MB lvvol1','lvextend -m 100MB lvvol1'], ans:1, hint:'lvresize -L +100MB -r /dev/mapper/lvvol1 يزيد ويعدل FS، مشابه لـ lvextend.'},
+  {type:'mcq', q:'Which option do you use when using lvextend to make sure that the file system is also resized?', choices:['L','f','r'], ans:2, hint:'-r يُعدل FS تلقائيًا مع lvextend للزيادة.'},
+  {type:'mcq', q:'This command shows a summary of available volume groups:', choices:['vgs','vgcreate','lvdisplay','Lvextend'], ans:0, hint:'vgs ملخص VG الحجم والحالة.'},
+  {type:'tf', q:'True or False: The physical extent size defines the size of the building blocks used to create logical volumes.', ans:true, hint:'صحيح — PE يحدد حجم الكتل الأساسية في LVM.'},
+  {type:'mcq', q:'To list all existing screen sessions, use the command:', choices:['screen -ls','screen -list','screen --ls-all'], ans:0, hint:'screen -ls يسرد الجلسات النشطة، مما يسمح بالعودة إليها بـ screen -r.'},
+  {type:'tf', q:'True or False: The primary secure shell server configuration file is ssh_config.', ans:false, hint:'خطأ — sshd_config هو ملف الخادم الرئيسي (/etc/ssh/sshd_config)، بينما ssh_config للعميل.'},
+  {type:'mcq', q:'What is the secure shell equivalent for the telnet command?', choices:['rsync','scp','ssh'], ans:2, hint:'ssh هو بديل آمن لـ telnet، يشفر الاتصال ويوفر shell عن بعد.'},
+  {type:'mcq', q:'Where are the user ssh keys stored?', choices:['sshd_config','.ssh sub-directory','ssh-keygen'], ans:1, hint:'~/.ssh/ يحتوي على id_rsa (خاص) وid_rsa.pub (عام)، للمصادقة بدون كلمة مرور.'},
+  {type:'mcq', q:'What would the command ssh-copy-id do?', choices:['make unsecure remote connection','generate pair of keys','install public keys on remote systems'], ans:2, hint:'ssh-copy-id user@host ينقل المفتاح العام إلى authorized_keys على الخادم، مما يمكن المصادقة التلقائية.'},
+  {type:'mcq', q:'What is the use of the ssh-keygen command?', choices:['generate authentication keys for ssh use','install public keys on remote systems','make unsecure remote connection'], ans:0, hint:'ssh-keygen يولد زوج مفاتيح RSA/ED25519 للمصادقة الآمنة في SSH.'},
+  {type:'mcq', q:'List the two encryption techniques described in this chapter.', choices:['secure and insecure','symmetric and asymmetric','local and remote'], ans:1, hint:'Symmetric (مفتاح مشترك مثل AES) وasymmetric (مفاتيح عام/خاص مثل RSA) هما التقنيتان الأساسيتان في SSH للتشفير.'},
+  {type:'mcq', q:'What is the default port used by the secure shell service?', choices:['22','2222','80'], ans:0, hint:'المنفذ 22 افتراضي لـ sshd، يُعدل في sshd_config للأمان.'},
+  {type:'mcq', q:'Which log file stores the authentication messages?', choices:['/var/log/dmesg','/var/log/httpd','/var/log/secure'], ans:2, hint:'/var/log/secure يسجل تسجيلات SSH، sudo، وأحداث المصادقة الأخرى.'},
+  {type:'mcq', q:'Which of the following is not a common approach to prevent against brute-force attacks against SSH servers?', choices:['Disable X11 forwarding','Have SSH listening on a nondefault port','Disable password login','Allow specific users only to log in'], ans:0, hint:'تعطيل X11 forwarding يحسن الأمان لكن لا يمنع brute-force مباشرة؛ المنفذ غير الافتراضي وPasswordAuthentication no أفضل.'},
+  {type:'mcq', q:'Which of the following successfully limits SSH server access to users bob and lisa only?', choices:['LimitUsers bob,lisa','AllowedUsers bob lisa','AllowUsers bob lisa','AllowedUsers bob,lisa'], ans:2, hint:'AllowUsers bob lisa في sshd_config يحد من الوصول إلى هؤلاء المستخدمين فقط، مُعاد تشغيل sshd بعد التعديل.'},
+  {type:'mcq', q:'Which of the following descriptions is correct for the MaxAuthTries option?', choices:['After reaching the number of attempts specified here, the account will be locked.','This option specifies the maximum number of login attempts. After reaching half the number specified here, additional failures are logged.','After reaching the number of attempts specified here, the IP address where the login attempts come from is blocked.','The number specified here indicates the maximum amount of login attempts per minute.'], ans:0, hint:'MaxAuthTries=3 يقفل الجلسة بعد 3 محاولات فاشلة، مما يمنع brute-force جزئيًا.'},
+  {type:'mcq', q:'SSH login in your test environment takes a long time. Which of the following options could be most likely responsible for the connection time problems?', choices:['UseLogin','GSSAPIAuthentication','UseDNS','TCPKeepAlive'], ans:2, hint:'UseDNS=yes يؤخر الاتصال بفحص reverse DNS للعنوان IP، قم بتعطيله للسرعة.'},
+  {type:'mcq', q:'Which of the following options is not used to keep SSH connections alive?', choices:['TCPKeepAlive','ClientAliveInterval','ClientAliveCountMax','UseDNS'], ans:3, hint:'UseDNS لا يحافظ على الاتصال؛ TCPKeepAlive وClientAlive* يرسلون pings دورية للكشف عن الانقطاع.'},
+  {type:'mcq', q:'Which file on SSH client computer needs to be added to set the Server-KeepAliveInterval for an individual client?', choices:['~/.ssh/ssh_config','~/.ssh/config','/etc/ssh/config','/etc/ssh/ssh_config'], ans:1, hint:'~/.ssh/config يسمح بإعدادات فردية للعميل، مثل ServerAliveInterval 60 للـ keepalive.'},
+  {type:'mcq', q:'Which of the following is true about remote access to Linux servers from a Windows environment?', choices:['Open a shell terminal on Windows and type ssh. The ssh command is available as a default part of the Windows operating system.','Configure Remote Access on Windows if you want to access Linux servers running the sshd process.','Install the PuTTY program on Windows to access sshd services on Linux from Windows.','You cannot remotely access Linux machines from Windows.'], ans:2, hint:'PuTTY هو عميل SSH شهير لـ Windows، يدعم المفاتيح والـ tunneling.'},
+  {type:'mcq', q:'What is the name of the file in which the public key fingerprint of the SSH servers you have connected to in the past are stored?', choices:['/etc/ssh/remote_hosts','/etc/ssh/known_hosts','~/.ssh/remote_hosts','~/.ssh/known_hosts'], ans:3, hint:'~/.ssh/known_hosts يخزن بصمات المفاتيح للخوادم المعروفة، للتحقق من الهوية.'},
+  {type:'mcq', q:'Which of the following statements about key-based SSH authentication is true?', choices:['After creating the key pair, you need to copy the private key to the remote server.','Use scp to copy the public key to the remote server.','Use ssh-copy-id to copy the public key to the remote server.','Use ssh-keygen on the server to generate a key pair that matches the client keys.'], ans:2, hint:'ssh-copy-id ينقل .pub إلى authorized_keys على الخادم، مما يمكن الدخول بدون كلمة مرور.'},
+  {type:'mcq', q:'Which command enables you to generate an ssh public/private key pair?', choices:['ssh-keygen','ssh-copy-id','scp'], ans:0, hint:'ssh-keygen -t rsa يولد الزوج، مع passphrase للأمان.'},
+  {type:'mcq', q:'useful command that allows you to open multiple terminal sessions', choices:['scp','ssh','screen','ssh-keygen'], ans:2, hint:'screen يدير جلسات متعددة، يستمر حتى بعد الخروج، مع -S للاسم.'},
+  {type:'mcq', q:'On default RHEL 7 installation, Which command installs the software packages that are needed to configure an Apache web server?', choices:['yum install httpd','yum install web-server','yum install apache','yum install apache2'], ans:0, hint:'yum install httpd يثبت Apache كاملاً في RHEL7.'},
+  {type:'mcq', q:'What is the name of the main Apache configuration file?', choices:['/etc/httpd/conf/httpd.conf','/etc/httpd/httpd.conf','/etc/apache2/apache.conf','/etc/httpd/default-server.conf'], ans:0, hint:'/etc/httpd/conf/httpd.conf الرئيسي، يشمل Include للآخرين.'},
+  {type:'mcq', q:'Which parameter in the Apache configuration file is used to specify where Apache will serve its documents from?', choices:['ServerRoot','ServerDocuments','DocumentRoot','DocumentIndex'], ans:2, hint:'DocumentRoot /var/www/html يحدد موقع الخدمة.'},
+  {type:'mcq', q:'Which parameter in the main Apache configuration file defines the location where the Apache process looks for its configuration files?', choices:['ServerRoot','ServerDocuments','DocumentRoot','DocumentIndex'], ans:0, hint:'ServerRoot /etc/httpd يحدد جذر التثبيت.'},
+  {type:'mcq', q:'Which directory contains the main Apache configuration file?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:0, hint:'/etc/httpd يحتوي httpd.conf.'},
+  {type:'mcq', q:'Which directory contains the configuration files for the different Apache modules?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:3, hint:'/etc/httpd/conf.modules.d لتكوينات الوحدات.'},
+  {type:'mcq', q:'Which directory is used to drop configuration files that are installed from RPMs?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:2, hint:'/etc/httpd/conf.d للملفات الإضافية من الحزم.'},
+  {type:'mcq', q:'Which virtual host type allows you to run multiple virtual hosts on the same IP address?', choices:['NameBased','IPBased','ConfigurationBased','Default'], ans:0, hint:'NameBased لاستخدام Host header.'},
+  {type:'mcq', q:'Which line is used to start the definition of a virtual host that listens on port 80 of all IP addresses on the current server?', choices:['<VirtualHost *:80>','<VirtualHost *>','<NameHost *:80>','<NameHost *>'], ans:0, hint:'<VirtualHost *:80> للمنفذ 80 على كل IPs.'},
+  {type:'mcq', q:'Which of the following statements about virtual hosts is not true?', choices:['When virtual hosts are offered through an httpd process, the default configuration no longer works.','The names of virtual hosts must be resolvable through /etc/hosts or DNS.','To use virtual hosts, the mod_virt package must be installed.','Virtual host configurations can be specified in httpd.conf.'], ans:2, hint:'لا حاجة لـ mod_virt؛ VirtualHost كافٍ.'},
+  {type:'mcq', q:'What specifically is the AllowOverride directive used for?', choices:['If set to yes, the contents of a directory can be changed.','This setting is specifically for user home directories. If set to yes, these will be included in the Apache configuration.','If set to yes, the .htaccess file in Apache directories will be considered, which will have a performance price.','Set to yes if you want to allow users to create additional configuration files in directories.'], ans:2, hint:'AllowOverride لـ .htaccess، مع تكلفة أداء.'},
+  {type:'mcq', q:'Which utility enables you to generate a TLS certificate and key for setting up a TLS security Apache web server?', choices:['genkey','openssl','createkey','Sslkey'], ans:1, hint:'openssl لتوليد TLS cert/key.'},
+  {type:'mcq', q:'What is the default directory where the TLS private key is stored?', choices:['/etc/ssl/certs/servername.key','/etc/pki/tls/private/servername.key','/etc/tls/keys/servername.key','/etc/ssl/certs/private/servername.key'], ans:1, hint:'/etc/pki/tls/private/ للمفاتيح.'},
+  {type:'mcq', q:'When configuring an Apache server for use of TLS, some directives are generally changed. Which of the following is not typically among them?', choices:['SSLEngine','SSLCertificateFile','SSLCertificateKeyFile','ServerName'], ans:3, hint:'ServerName ليس TLS-specific.'},
+  {type:'mcq', q:'How do you enable the httpd service to be started automatically when Booting?', choices:['systemctl enable httpd','systemctl start httpd','systemctl httpd enable','Service enable httpd'], ans:0, hint:'systemctl enable للتلقائي.'},
+  {type:'mcq', q:'Which command enables you to test a web server from a server that does not offer a graphical interface?', choices:['scp','ssh','elinks','firefox'], ans:2, hint:'elinks للاختبار النصي.'},
+  {type:'mcq', q:'What is the name of the default Apache configuration file?', choices:['http.conf','apache.conf','httpd.conf','conf.d'], ans:2, hint:'httpd.conf الافتراضي.'},
+  {type:'mcq', q:'Which command enables you to see whether the Apache web server is currently running?', choices:['systemctl status apache','systemctl apache status','systemctl httpd status','systemctl status httpd'], ans:3, hint:'systemctl status httpd للحالة.'},
+  {type:'mcq', q:'In which directory would you typically find the TLS certificate file and the TLS key?', choices:['/etc/certs/pki','/var/log/certs/','/etc/pki/tls/certs/','/etc/certs/'], ans:2, hint:'/etc/pki/tls/certs/ للـ TLS.'},
+  {type:'mcq', q:'What is the default configuration file for configuring TLS secured web servers?', choices:['ssl.conf','httpd.conf','apache.conf','http.conf'], ans:0, hint:'ssl.conf لـ TLS.'},
+  {type:'mcq', q:'Which of the following is not a standard component in an LVM setup?', choices:['Logical volume','File system','Volume group','Physical volume'], ans:1, hint:'FS ليست LVM component.'},
+  {type:'mcq', q:'Which of the following is not an LVM feature?', choices:['Volume resizing','Hot replacement of failing disk','Copy on write','Snapshots'], ans:1, hint:'Hot replacement غير أساسي.'},
+  {type:'mcq', q:'Which partition type do you need on a GPT partition to mark it with the LVM partition type?', choices:['83','8e','8300','8e00'], ans:2, hint:'8300 لـ GPT LVM.'},
+  {type:'mcq', q:'Which of the following commands shows correctly how to create a logical volume that uses 50% of available disk space in the volume group?', choices:['vgadd -n lvdata -l +50%FREE vgdata','lvcreate lvdata -l 50%FREE vgdata','lvcreate -n lvdata -l 50%FREE vgdata','lvadd -n lvdata -l 50% FREE /dev/vgdata'], ans:2, hint:'lvcreate -n -l 50%FREE.'},
+  {type:'mcq', q:'Which command shows an overview of available physical volumes?', choices:['pvshow','pvdisplay','pvs','Pvlist'], ans:2, hint:'pvs للـ PV overview.'},
+  {type:'mcq', q:'Which of the following statements about physical volumes is/are true?', choices:['Partitions should be flagged as LVM partition before assigning them as a physical volume.','Raw disks can be flagged as a physical volume.','Physical volumes can only be created on the Ext4 or XFS file system.','Physical volumes cannot be created on LUNs.'], ans:0, hint:'Flagging partitions as LVM true، raw disks ok.'},
+  {type:'mcq', q:'Which of the following shows correct syntax for creating a volume group?', choices:['vgcreate /dev/vgdata sda1','vgcreate sda1 /dev/vgdata','vgcreate vgdata /dev/sda1','vgcreate vgdata sda1'], ans:3, hint:'vgcreate vgdata /dev/sda1 syntax.'},
+  {type:'mcq', q:'Which of the following commands would set the extent size that is used when creating a logical volume to a default of 4 MiB?', choices:['pvcreate -s 4M /dev/sda4','vgcreate -s 4M vgdata /dev/sda4','lvcreate -s 4M -L 200M -n lvdata vgdata','lvcreate -x 4M -L 200M -n lvdata vgdata'], ans:1, hint:'vgcreate -s 4M for PE.'},
+  {type:'mcq', q:'Which of the following is not a likely correct name for the logical volume lvdata that was created in the volume group vgdata?', choices:['/dev/vgdata-lvdata','/dev/vgdata/lvdata','/dev/dm-1','/dev/mapper/vgdata-lvdata'], ans:1, hint:'/dev/vgdata/lvdata not standard.'},
+  {type:'mcq', q:'Which of the following commands resizes the logical volume /dev/vgdata/lvdata as well as the file system that is used on top of it, and adds 1GB to the existing volume size?', choices:['lvresize -l +1G -r /dev/vgdata/lvdata','lvresize -L +1G -r /dev/vgdata/lvdata','lvresize -L 1G -r /dev/vgdata/lvdata','lvresize -l 1G -f /dev/vgdata/lvdata'], ans:1, hint:'lvresize -L +1G -r for resize.'},
+  {type:'mcq', q:'Which option do you use when using lvextend to make sure that the file system is also resized?', choices:['L','f','r'], ans:2, hint:'-r for FS resize.'},
+  {type:'mcq', q:'This command shows a summary of available volume groups:', choices:['vgs','vgcreate','lvdisplay','Lvextend'], ans:0, hint:'vgs summary.'},
+  {type:'tf', q:'True or False: The physical extent size defines the size of the building blocks used to create logical volumes.', ans:true, hint:'صحيح — PE blocks.'},
+  {type:'mcq', q:'Which command shows a short summary of the physical volumes on your system as well as the volume group to which these belong?', choices:['pvdisplay','lvdisplay','pvcreate','Lvcreate'], ans:0, hint:'pvdisplay short summary.'},
+  {type:'mcq', q:'What do you need to do to add an entire hard disk /dev/sdd to the volume group vgroup?', choices:['vgextend vggrp /dev/sdb2','vgextend vgdata /dev/sdd','vgextend vgroup /dev/sdd2','vgextend vgroup /dev/sdd'], ans:3, hint:'vgextend vgroup /dev/sdd.'},
+  {type:'mcq', q:'Which command enables you to create a logical volume lvvol1 with a size of 6MiB?', choices:['lvcreate -s lvvol1 -L 6MB lvvol1','lvcreate -n lvvol1 -L 6MiB vgdata','lvcreate -n lvvol1 -L 6MB lvvol1','lvcreate -s 4M -L 200M -n lvdata'], ans:1, hint:'lvcreate -n -L 6MiB.'},
+  {type:'mcq', q:'How do you show which logical volumes are available?', choices:['lvdisplay','vgdisplay','vgcreate','lvcreate'], ans:0, hint:'lvdisplay LVs.'},
+  {type:'mcq', q:'Which command enables you to add 100MB to the logical volume lvvol1, assuming that the disk space is available in the volume group?', choices:['lvresize +100MB -r /dev/mapper/lvvol1','lvresize -L +100MB -r /dev/mapper/lvvol1','lvextend -r 100MB lvvol1','lvextend -m 100MB lvvol1'], ans:1, hint:'lvresize -L +100MB -r.'},
+  {type:'mcq', q:'Which option do you use when using lvextend to make sure that the file system is also resized?', choices:['L','f','r'], ans:2, hint:'-r resize.'},
+  {type:'mcq', q:'This command shows a summary of available volume groups:', choices:['vgs','vgcreate','lvdisplay','Lvextend'], ans:0, hint:'vgs.'},
+  {type:'tf', q:'True or False: The physical extent size defines the size of the building blocks used to create logical volumes.', ans:true, hint:'صحيح.'},
+  {type:'mcq', q:'To list all existing screen sessions, use the command:', choices:['screen -ls','screen -list','screen --ls-all'], ans:0, hint:'screen -ls list.'},
+  {type:'tf', q:'True or False: The primary secure shell server configuration file is ssh_config.', ans:false, hint:'sshd_config server.'},
+  {type:'mcq', q:'What is the secure shell equivalent for the telnet command?', choices:['rsync','scp','ssh'], ans:2, hint:'ssh for telnet.'},
+  {type:'mcq', q:'Where are the user ssh keys stored?', choices:['sshd_config','.ssh sub-directory','ssh-keygen'], ans:1, hint:'.ssh keys.'},
+  {type:'mcq', q:'What would the command ssh-copy-id do?', choices:['make unsecure remote connection','generate pair of keys','install public keys on remote systems'], ans:2, hint:'ssh-copy-id install.'},
+  {type:'mcq', q:'What is the use of the ssh-keygen command?', choices:['generate authentication keys for ssh use','install public keys on remote systems','make unsecure remote connection'], ans:0, hint:'ssh-keygen generate.'},
+  {type:'mcq', q:'List the two encryption techniques described in this chapter.', choices:['secure and insecure','symmetric and asymmetric','local and remote'], ans:1, hint:'symmetric asymmetric.'},
+  {type:'mcq', q:'What is the default port used by the secure shell service?', choices:['22','2222','80'], ans:0, hint:'22 default.'},
+  {type:'mcq', q:'Which log file stores the authentication messages?', choices:['/var/log/dmesg','/var/log/httpd','/var/log/secure'], ans:2, hint:'/var/log/secure auth.'},
+  {type:'mcq', q:'Which of the following is not a common approach to prevent against brute-force attacks against SSH servers?', choices:['Disable X11 forwarding','Have SSH listening on a nondefault port','Disable password login','Allow specific users only to log in'], ans:0, hint:'X11 not brute-force.'},
+  {type:'mcq', q:'Which of the following successfully limits SSH server access to users bob and lisa only?', choices:['LimitUsers bob,lisa','AllowedUsers bob lisa','AllowUsers bob lisa','AllowedUsers bob,lisa'], ans:2, hint:'AllowUsers bob lisa.'},
+  {type:'mcq', q:'Which of the following descriptions is correct for the MaxAuthTries option?', choices:['After reaching the number of attempts specified here, the account will be locked.','This option specifies the maximum number of login attempts. After reaching half the number specified here, additional failures are logged.','After reaching the number of attempts specified here, the IP address where the login attempts come from is blocked.','The number specified here indicates the maximum amount of login attempts per minute.'], ans:0, hint:'MaxAuthTries lock.'},
+  {type:'mcq', q:'SSH login in your test environment takes a long time. Which of the following options could be most likely responsible for the connection time problems?', choices:['UseLogin','GSSAPIAuthentication','UseDNS','TCPKeepAlive'], ans:2, hint:'UseDNS delay.'},
+  {type:'mcq', q:'Which of the following options is not used to keep SSH connections alive?', choices:['TCPKeepAlive','ClientAliveInterval','ClientAliveCountMax','UseDNS'], ans:3, hint:'UseDNS not keepalive.'},
+  {type:'mcq', q:'Which file on SSH client computer needs to be added to set the Server-KeepAliveInterval for an individual client?', choices:['~/.ssh/ssh_config','~/.ssh/config','/etc/ssh/config','/etc/ssh/ssh_config'], ans:1, hint:'~/.ssh/config individual.'},
+  {type:'mcq', q:'Which of the following is true about remote access to Linux servers from a Windows environment?', choices:['Open a shell terminal on Windows and type ssh. The ssh command is available as a default part of the Windows operating system.','Configure Remote Access on Windows if you want to access Linux servers running the sshd process.','Install the PuTTY program on Windows to access sshd services on Linux from Windows.','You cannot remotely access Linux machines from Windows.'], ans:2, hint:'PuTTY Windows.'},
+  {type:'mcq', q:'What is the name of the file in which the public key fingerprint of the SSH servers you have connected to in the past are stored?', choices:['/etc/ssh/remote_hosts','/etc/ssh/known_hosts','~/.ssh/remote_hosts','~/.ssh/known_hosts'], ans:3, hint:'~/.ssh/known_hosts fingerprints.'},
+  {type:'mcq', q:'Which of the following statements about key-based SSH authentication is true?', choices:['After creating the key pair, you need to copy the private key to the remote server.','Use scp to copy the public key to the remote server.','Use ssh-copy-id to copy the public key to the remote server.','Use ssh-keygen on the server to generate a key pair that matches the client keys.'], ans:2, hint:'ssh-copy-id public key.'},
+  {type:'mcq', q:'Which command enables you to generate an ssh public/private key pair?', choices:['ssh-keygen','ssh-copy-id','scp'], ans:0, hint:'ssh-keygen pair.'},
+  {type:'mcq', q:'useful command that allows you to open multiple terminal sessions', choices:['scp','ssh','screen','ssh-keygen'], ans:2, hint:'screen multiple.'},
+  {type:'mcq', q:'On default RHEL 7 installation, Which command installs the software packages that are needed to configure an Apache web server?', choices:['yum install httpd','yum install web-server','yum install apache','yum install apache2'], ans:0, hint:'httpd install.'},
+  {type:'mcq', q:'What is the name of the main Apache configuration file?', choices:['/etc/httpd/conf/httpd.conf','/etc/httpd/httpd.conf','/etc/apache2/apache.conf','/etc/httpd/default-server.conf'], ans:0, hint:'/etc/httpd/conf/httpd.conf main.'},
+  {type:'mcq', q:'Which parameter in the Apache configuration file is used to specify where Apache will serve its documents from?', choices:['ServerRoot','ServerDocuments','DocumentRoot','DocumentIndex'], ans:2, hint:'DocumentRoot serve.'},
+  {type:'mcq', q:'Which parameter in the main Apache configuration file defines the location where the Apache process looks for its configuration files?', choices:['ServerRoot','ServerDocuments','DocumentRoot','DocumentIndex'], ans:0, hint:'ServerRoot config location.'},
+  {type:'mcq', q:'Which directory contains the main Apache configuration file?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:0, hint:'/etc/httpd main.'},
+    {type:'mcq', q:'Which directory contains the configuration files for the different Apache modules?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:3, hint:'/etc/httpd/conf.modules.d يحتوي على ملفات تكوين الوحدات المختلفة مثل mod_ssl وmod_auth، والتي تُحمّل تلقائيًا عند تشغيل Apache، مما يسمح بتمكين الوظائف الإضافية بسهولة.'},
+  {type:'mcq', q:'Which directory is used to drop configuration files that are installed from RPMs?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:2, hint:'/etc/httpd/conf.d هو الدليل المخصص لإضافة ملفات تكوين إضافية من خلال حزم RPM، حيث يتم تضمينها تلقائيًا في httpd.conf عبر Include، مما يبسط إدارة الإضافات دون تعديل الملف الرئيسي.'},
+  {type:'mcq', q:'Which virtual host type allows you to run multiple virtual hosts on the same IP address?', choices:['NameBased','IPBased','ConfigurationBased','Default'], ans:0, hint:'NameBased virtual hosting يسمح بتشغيل مواقع متعددة على عنوان IP واحد باستخدام رأس Host في طلب HTTP، مما يوفر في استخدام عناوين IP ويجعل الإعداد أكثر كفاءة للخوادم المشتركة.'},
+  {type:'mcq', q:'Which line is used to start the definition of a virtual host that listens on port 80 of all IP addresses on the current server?', choices:['<VirtualHost *:80>','<VirtualHost *>','<NameHost *:80>','<NameHost *>'], ans:0, hint:'<VirtualHost *:80> هو السطر الذي يبدأ تعريف الاستضافة الافتراضية أو المحددة، حيث * يشير إلى جميع عناوين IP، و80 هو المنفذ HTTP القياسي، ويُغلق بـ </VirtualHost> لتحديد النطاق.'},
+  {type:'mcq', q:'Which of the following statements about virtual hosts is not true?', choices:['When virtual hosts are offered through an httpd process, the default configuration no longer works.','The names of virtual hosts must be resolvable through /etc/hosts or DNS.','To use virtual hosts, the mod_virt package must be installed.','Virtual host configurations can be specified in httpd.conf.'], ans:2, hint:'لا يوجد حزمة mod_virt مطلوبة؛ يتم تمكين الاستضافات الافتراضية ببساطة من خلال إضافة كتل <VirtualHost> في httpd.conf أو ملفات conf.d، مع التأكد من تحميل mod_vhost_alias إذا لزم الأمر للدعم المتقدم.'},
+  {type:'mcq', q:'What specifically is the AllowOverride directive used for?', choices:['If set to yes, the contents of a directory can be changed.','This setting is specifically for user home directories. If set to yes, these will be included in the Apache configuration.','If set to yes, the .htaccess file in Apache directories will be considered, which will have a performance price.','Set to yes if you want to allow users to create additional configuration files in directories.'], ans:2, hint:'AllowOverride=All أو None يحدد ما إذا كان Apache سيقرأ ملف .htaccess في الدليل لتطبيق إعدادات إضافية مثل إعادة التوجيه أو التحكم في الوصول، لكن هذا يزيد من العبء الحسابي لكل طلب، لذا يُفضل None للأداء الأمثل.'},
+  {type:'mcq', q:'Which utility enables you to generate a TLS certificate and key for setting up a TLS security Apache web server?', choices:['genkey','openssl','createkey','Sslkey'], ans:1, hint:'openssl هو الأداة القياسية لتوليد شهادة TLS ذاتية التوقيع ومفتاح خاص باستخدام أوامر مثل req -newkey rsa:2048، مما يوفر التشفير للاتصالات الآمنة (HTTPS) في Apache.'},
+  {type:'mcq', q:'What is the default directory where the TLS private key is stored?', choices:['/etc/ssl/certs/servername.key','/etc/pki/tls/private/servername.key','/etc/tls/keys/servername.key','/etc/ssl/certs/private/servername.key'], ans:1, hint:'/etc/pki/tls/private/ هو الدليل الافتراضي في RHEL لتخزين المفاتيح الخاصة بـ TLS، محمي بإذن صارم (600) لمنع الوصول غير المصرح به، ويُشار إليه في SSLCertificateKeyFile.'},
+  {type:'mcq', q:'When configuring an Apache server for use of TLS, some directives are generally changed. Which of the following is not typically among them?', choices:['SSLEngine','SSLCertificateFile','SSLCertificateKeyFile','ServerName'], ans:3, hint:'ServerName هو إعداد عام لتحديد اسم الخادم ولا يرتبط مباشرة بـ TLS؛ الإعدادات الخاصة بـ TLS تشمل SSLEngine on لتفعيل التشفير، ومسارات الشهادة والمفتاح.'},
+  {type:'mcq', q:'How do you enable the httpd service to be started automatically when Booting?', choices:['systemctl enable httpd','systemctl start httpd','systemctl httpd enable','Service enable httpd'], ans:0, hint:'systemctl enable httpd ينشئ روابط رمزية في /etc/systemd/system لتمكين الخدمة عند كل بدء تشغيل، مما يضمن توافر الويب سريعًا دون تدخل يدوي.'},
+  {type:'mcq', q:'Which command enables you to test a web server from a server that does not offer a graphical interface?', choices:['scp','ssh','elinks','firefox'], ans:2, hint:'elinks هو متصفح نصي يعمل في الطرفية، يسمح باختبار صفحات الويب محليًا (elinks http://localhost) أو remotely، مثالي للخوادم headless.'},
+  {type:'mcq', q:'What is the name of the default Apache configuration file?', choices:['http.conf','apache.conf','httpd.conf','conf.d'], ans:2, hint:'httpd.conf هو الملف الافتراضي الرئيسي الذي يحتوي على الإعدادات الأساسية لـ Apache في RHEL، ويشمل ملفات أخرى عبر Include.'},
+  {type:'mcq', q:'Which command enables you to see whether the Apache web server is currently running?', choices:['systemctl status apache','systemctl apache status','systemctl httpd status','systemctl status httpd'], ans:3, hint:'systemctl status httpd يظهر حالة الخدمة (active/inactive)، PID، والسجلات الأخيرة من /var/log/httpd، مما يساعد في التشخيص السريع.'},
+  {type:'mcq', q:'In which directory would you typically find the TLS certificate file and the TLS key?', choices:['/etc/certs/pki','/var/log/certs/','/etc/pki/tls/certs/','/etc/certs/'], ans:2, hint:'/etc/pki/tls/certs/ هو الدليل القياسي في RHEL لشهادات TLS، بينما المفاتيح في private/، مما يتبع معايير PKI للأمان.'},
+  {type:'mcq', q:'What is the default configuration file for configuring TLS secured web servers?', choices:['ssl.conf','httpd.conf','apache.conf','http.conf'], ans:0, hint:'ssl.conf في /etc/httpd/conf.d/ مخصص لإعدادات TLS مثل SSLEngine ومسارات الشهادات، ويُحمّل تلقائيًا مع الخدمة الرئيسية.'},
+  {type:'mcq', q:'Which of the following is not a standard component in an LVM setup?', choices:['Logical volume','File system','Volume group','Physical volume'], ans:1, hint:'نظام الملفات (مثل ext4 أو XFS) ليس مكونًا أساسيًا في LVM؛ LVM يركز على PV (القرص/القسم)، VG (المجموعة)، وLV (الحجم المنطقي)، ثم تُنشأ FS عليها بشكل منفصل.'},
+  {type:'mcq', q:'Which of the following is not an LVM feature?', choices:['Volume resizing','Hot replacement of failing disk','Copy on write','Snapshots'], ans:1, hint:'استبدال القرص الساخن (hot replacement) ليس ميزة مدمجة في LVM؛ يدعم LVM الـ resizing الديناميكي، copy-on-write للـ snapshots، لكن الاستبدال يتطلب أدوات مثل mdadm أو إجراءات يدوية.'},
+  {type:'mcq', q:'Which partition type do you need on a GPT partition to mark it with the LVM partition type?', choices:['83','8e','8300','8e00'], ans:2, hint:'8300 هو رمز نوع القسم في GPT لـ LVM، يُحدد بأدوات مثل gdisk ليتم التعرف عليه كـ physical volume صالح أثناء pvcreate.'},
+  {type:'mcq', q:'Which of the following commands shows correctly how to create a logical volume that uses 50% of available disk space in the volume group?', choices:['vgadd -n lvdata -l +50%FREE vgdata','lvcreate lvdata -l 50%FREE vgdata','lvcreate -n lvdata -l 50%FREE vgdata','lvadd -n lvdata -l 50% FREE /dev/vgdata'], ans:2, hint:'lvcreate -n lvdata -l +50%FREE vgdata هو الأمر الصحيح لإنشاء حجم منطقي باسم lvdata يستخدم 50% من المساحة الحرة في volume group vgdata، مع + للإشارة إلى الإضافة النسبية.'},
+  {type:'mcq', q:'Which command shows an overview of available physical volumes?', choices:['pvshow','pvdisplay','pvs','Pvlist'], ans:2, hint:'pvs هو الأمر الموجز لعرض نظرة عامة على الـ physical volumes المتاحة، بما في ذلك حجمها، الحالة، والانتماء إلى volume groups، مثالي للاستخدام اليومي.'},
+  {type:'mcq', q:'Which of the following statements about physical volumes is/are true?', choices:['Partitions should be flagged as LVM partition before assigning them as a physical volume.','Raw disks can be flagged as a physical volume.','Physical volumes can only be created on the Ext4 or XFS file system.','Physical volumes cannot be created on LUNs.'], ans:0, hint:'الأقسام يجب تهيئتها كنوع LVM (8e لـ MBR أو 8300 لـ GPT) قبل pvcreate للتوافق، بينما الأقراص الخام والـ LUNs مدعومة مباشرة دون FS.'},
+  {type:'mcq', q:'Which of the following shows correct syntax for creating a volume group?', choices:['vgcreate /dev/vgdata sda1','vgcreate sda1 /dev/vgdata','vgcreate vgdata /dev/sda1','vgcreate vgdata sda1'], ans:3, hint:'vgcreate vgdata /dev/sda1 هو الصيغة الصحيحة لإنشاء volume group باسم vgdata من physical volume /dev/sda1، حيث يأتي اسم VG أولاً ثم PVs.'},
+  {type:'mcq', q:'Which of the following commands would set the extent size that is used when creating a logical volume to a default of 4 MiB?', choices:['pvcreate -s 4M /dev/sda4','vgcreate -s 4M vgdata /dev/sda4','lvcreate -s 4M -L 200M -n lvdata vgdata','lvcreate -x 4M -L 200M -n lvdata vgdata'], ans:1, hint:'vgcreate -s 4M vgdata /dev/sda4 يحدد حجم physical extent (PE) بـ 4 ميغابايت كافتراضي لجميع logical volumes في هذه VG، مما يؤثر على دقة التخصيص.'},
+  {type:'mcq', q:'Which of the following is not a likely correct name for the logical volume lvdata that was created in the volume group vgdata?', choices:['/dev/vgdata-lvdata','/dev/vgdata/lvdata','/dev/dm-1','/dev/mapper/vgdata-lvdata'], ans:1, hint:'/dev/vgdata/lvdata ليست صيغة قياسية؛ الأسماء الشائعة هي /dev/mapper/vgdata-lvdata (device-mapper) أو /dev/dm-X (رقم device)، بينما vgdata-lvdata قد تكون legacy.'},
+  {type:'mcq', q:'Which of the following commands resizes the logical volume /dev/vgdata/lvdata as well as the file system that is used on top of it, and adds 1GB to the existing volume size?', choices:['lvresize -l +1G -r /dev/vgdata/lvdata','lvresize -L +1G -r /dev/vgdata/lvdata','lvresize -L 1G -r /dev/vgdata/lvdata','lvresize -l 1G -f /dev/vgdata/lvdata'], ans:1, hint:'lvresize -L +1G -r /dev/vgdata/lvdata يزيد الحجم بـ 1 جيغابايت (+ للإضافة) ويعدل file system تلقائيًا باستخدام resize2fs أو xfs_growfs، مما يجعل العملية سلسة.'},
+  {type:'mcq', q:'Which option do you use when using lvextend to make sure that the file system is also resized?', choices:['L','f','r'], ans:2, hint:'-r مع lvextend يُفعل تعديل file system تلقائيًا بعد زيادة LV، مما يمتد FS لاستخدام المساحة الجديدة دون أوامر إضافية.'},
+  {type:'mcq', q:'This command shows a summary of available volume groups:', choices:['vgs','vgcreate','lvdisplay','Lvextend'], ans:0, hint:'vgs يقدم ملخصًا موجزًا عن volume groups المتاحة، بما في ذلك الحجم، عدد PEs، والحالة، مشابه لـ pvs ولكن خاص بـ VGs.'},
+  {type:'tf', q:'True or False: The physical extent size defines the size of the building blocks used to create logical volumes.', ans:true, hint:'صحيح — حجم physical extent (PE، افتراضي 4MB) هو الوحدة الأساسية التي تُقسم إليها PVs لبناء LVs، مما يحدد الحد الأدنى للتخصيص.'},
+  {type:'mcq', q:'Which command shows a short summary of the physical volumes on your system as well as the volume group to which these belong?', choices:['pvdisplay','lvdisplay','pvcreate','Lvcreate'], ans:0, hint:'pvdisplay يعرض ملخصًا قصيرًا للـ physical volumes مع تفاصيل VG التابع لها، الحجم، وPEs، أكثر تفصيلاً من pvs للتحليل.'},
+  {type:'mcq', q:'What do you need to do to add an entire hard disk /dev/sdd to the volume group vgroup?', choices:['vgextend vggrp /dev/sdb2','vgextend vgdata /dev/sdd','vgextend vgroup /dev/sdd2','vgextend vgroup /dev/sdd'], ans:3, hint:'vgextend vgroup /dev/sdd يضيف القرص كاملاً كـ PV إلى VG vgroup، بعد التأكد من أنه فارغ أو مُهيأ بـ pvcreate، مما يزيد المساحة المتاحة.'},
+  {type:'mcq', q:'Which command enables you to create a logical volume lvvol1 with a size of 6MiB?', choices:['lvcreate -s lvvol1 -L 6MB lvvol1','lvcreate -n lvvol1 -L 6MiB vgdata','lvcreate -n lvvol1 -L 6MB lvvol1','lvcreate -s 4M -L 200M -n lvdata'], ans:1, hint:'lvcreate -n lvvol1 -L 6MiB vgdata ينشئ LV باسم lvvol1 وحجم 6 ميغابايت من VG vgdata، مع MiB للدقة في الوحدات.'},
+  {type:'mcq', q:'How do you show which logical volumes are available?', choices:['lvdisplay','vgdisplay','vgcreate','lvcreate'], ans:0, hint:'lvdisplay يسرد جميع logical volumes المتاحة مع تفاصيلها مثل الحجم والحالة، أو استخدم lvs للنسخة الموجزة.'},
+  {type:'mcq', q:'Which command enables you to add 100MB to the logical volume lvvol1, assuming that the disk space is available in the volume group?', choices:['lvresize +100MB -r /dev/mapper/lvvol1','lvresize -L +100MB -r /dev/mapper/lvvol1','lvextend -r 100MB lvvol1','lvextend -m 100MB lvvol1'], ans:1, hint:'lvresize -L +100MB -r /dev/mapper/lvvol1 يزيد الحجم بـ 100 ميغابايت ويعدل FS تلقائيًا، مع + للإضافة إلى الحجم الحالي.'},
+  {type:'mcq', q:'Which option do you use when using lvextend to make sure that the file system is also resized?', choices:['L','f','r'], ans:2, hint:'-r مع lvextend يمتد file system ليتناسب مع الزيادة في LV، مما يستفيد من المساحة الجديدة فورًا.'},
+  {type:'mcq', q:'This command shows a summary of available volume groups:', choices:['vgs','vgcreate','lvdisplay','Lvextend'], ans:0, hint:'vgs يعرض ملخصًا عن VGs المتاحة، مثالي للتحقق السريع من المساحة.'},
+  {type:'tf', q:'True or False: The physical extent size defines the size of the building blocks used to create logical volumes.', ans:true, hint:'صحيح — PE size يحدد حجم اللبنات الأساسية لـ LVs.'},
+  {type:'mcq', q:'To list all existing screen sessions, use the command:', choices:['screen -ls','screen -list','screen --ls-all'], ans:0, hint:'screen -ls يسرد الجلسات الموجودة مع أرقامها، للعودة بـ -r PID.'},
+  {type:'tf', q:'True or False: The primary secure shell server configuration file is ssh_config.', ans:false, hint:'خطأ — sshd_config هو الملف الرئيسي للخادم، يحدد Port، PermitRootLogin، إلخ.'},
+  {type:'mcq', q:'What is the secure shell equivalent for the telnet command?', choices:['rsync','scp','ssh'], ans:2, hint:'ssh يوفر shell آمن عن بعد، بديل لـ telnet غير الآمن.'},
+  {type:'mcq', q:'Where are the user ssh keys stored?', choices:['sshd_config','.ssh sub-directory','ssh-keygen'], ans:1, hint:'~/.ssh/ sub-directory يحتوي على مفاتيح المستخدم للمصادقة.'},
+  {type:'mcq', q:'What would the command ssh-copy-id do?', choices:['make unsecure remote connection','generate pair of keys','install public keys on remote systems'], ans:2, hint:'ssh-copy-id يثبت المفتاح العام على الخادم للوصول التلقائي.'},
+  {type:'mcq', q:'What is the use of the ssh-keygen command?', choices:['generate authentication keys for ssh use','install public keys on remote systems','make unsecure remote connection'], ans:0, hint:'ssh-keygen يولد زوج مفاتيح للمصادقة في SSH.'},
+  {type:'mcq', q:'List the two encryption techniques described in this chapter.', choices:['secure and insecure','symmetric and asymmetric','local and remote'], ans:1, hint:'symmetric (مفتاح واحد) وasymmetric (مفاتيح زوج) للتشفير في SSH.'},
+  {type:'mcq', q:'What is the default port used by the secure shell service?', choices:['22','2222','80'], ans:0, hint:'22 هو المنفذ الافتراضي لـ SSH، يُغير للأمان.'},
+  {type:'mcq', q:'Which log file stores the authentication messages?', choices:['/var/log/dmesg','/var/log/httpd','/var/log/secure'], ans:2, hint:'/var/log/secure يسجل رسائل المصادقة لـ SSH وغيرها.'},
+  {type:'mcq', q:'Which of the following is not a common approach to prevent against brute-force attacks against SSH servers?', choices:['Disable X11 forwarding','Have SSH listening on a nondefault port','Disable password login','Allow specific users only to log in'], ans:0, hint:'تعطيل X11 لا يمنع brute-force؛ المنفذ غير افتراضي وPubkeyAuthentication yes أفضل.'},
+  {type:'mcq', q:'Which of the following successfully limits SSH server access to users bob and lisa only?', choices:['LimitUsers bob,lisa','AllowedUsers bob lisa','AllowUsers bob lisa','AllowedUsers bob,lisa'], ans:2, hint:'AllowUsers bob lisa يحدد المستخدمين المسموحين في sshd_config.'},
+  {type:'mcq', q:'Which of the following descriptions is correct for the MaxAuthTries option?', choices:['After reaching the number of attempts specified here, the account will be locked.','This option specifies the maximum number of login attempts. After reaching half the number specified here, additional failures are logged.','After reaching the number of attempts specified here, the IP address where the login attempts come from is blocked.','The number specified here indicates the maximum amount of login attempts per minute.'], ans:0, hint:'MaxAuthTries يحد من المحاولات ويقفل الجلسة بعد الرقم.'},
+  {type:'mcq', q:'SSH login in your test environment takes a long time. Which of the following options could be most likely responsible for the connection time problems?', choices:['UseLogin','GSSAPIAuthentication','UseDNS','TCPKeepAlive'], ans:2, hint:'UseDNS=yes يسبب تأخيرًا بفحص DNS، قم بتعطيله.'},
+  {type:'mcq', q:'Which of the following options is not used to keep SSH connections alive?', choices:['TCPKeepAlive','ClientAliveInterval','ClientAliveCountMax','UseDNS'], ans:3, hint:'UseDNS لا يحافظ على الاتصال؛ الخيارات الأخرى ترسل إشارات حيوية.'},
+  {type:'mcq', q:'Which file on SSH client computer needs to be added to set the Server-KeepAliveInterval for an individual client?', choices:['~/.ssh/ssh_config','~/.ssh/config','/etc/ssh/config','/etc/ssh/ssh_config'], ans:1, hint:'~/.ssh/config لإعداد KeepAlive فردي للعميل.'},
+  {type:'mcq', q:'Which of the following is true about remote access to Linux servers from a Windows environment?', choices:['Open a shell terminal on Windows and type ssh. The ssh command is available as a default part of the Windows operating system.','Configure Remote Access on Windows if you want to access Linux servers running the sshd process.','Install the PuTTY program on Windows to access sshd services on Linux from Windows.','You cannot remotely access Linux machines from Windows.'], ans:2, hint:'PuTTY هو برنامج شهير للوصول إلى SSH من Windows.'},
+  {type:'mcq', q:'What is the name of the file in which the public key fingerprint of the SSH servers you have connected to in the past are stored?', choices:['/etc/ssh/remote_hosts','/etc/ssh/known_hosts','~/.ssh/remote_hosts','~/.ssh/known_hosts'], ans:3, hint:'~/.ssh/known_hosts يخزن بصمات الخوادم للتحقق من التغييرات.'},
+  {type:'mcq', q:'Which of the following statements about key-based SSH authentication is true?', choices:['After creating the key pair, you need to copy the private key to the remote server.','Use scp to copy the public key to the remote server.','Use ssh-copy-id to copy the public key to the remote server.','Use ssh-keygen on the server to generate a key pair that matches the client keys.'], ans:2, hint:'ssh-copy-id ينقل المفتاح العام بأمان إلى الخادم.'},
+  {type:'mcq', q:'Which command enables you to generate an ssh public/private key pair?', choices:['ssh-keygen','ssh-copy-id','scp'], ans:0, hint:'ssh-keygen لتوليد الزوج الآمن.'},
+  {type:'mcq', q:'useful command that allows you to open multiple terminal sessions', choices:['scp','ssh','screen','ssh-keygen'], ans:2, hint:'screen يدير جلسات طرفية متعددة بشكل مستقل.'},
+  {type:'mcq', q:'On default RHEL 7 installation, Which command installs the software packages that are needed to configure an Apache web server?', choices:['yum install httpd','yum install web-server','yum install apache','yum install apache2'], ans:0, hint:'yum install httpd يثبت الويب سرفر Apache في RHEL7.'},
+  {type:'mcq', q:'What is the name of the main Apache configuration file?', choices:['/etc/httpd/conf/httpd.conf','/etc/httpd/httpd.conf','/etc/apache2/apache.conf','/etc/httpd/default-server.conf'], ans:0, hint:'/etc/httpd/conf/httpd.conf الرئيسي للتكوين.'},
+  {type:'mcq', q:'Which parameter in the Apache configuration file is used to specify where Apache will serve its documents from?', choices:['ServerRoot','ServerDocuments','DocumentRoot','DocumentIndex'], ans:2, hint:'DocumentRoot يحدد دليل الوثائق المُخدَمَة.'},
+  {type:'mcq', q:'Which parameter in the main Apache configuration file defines the location where the Apache process looks for its configuration files?', choices:['ServerRoot','ServerDocuments','DocumentRoot','DocumentIndex'], ans:0, hint:'ServerRoot يحدد موقع الإعدادات.'},
+  {type:'mcq', q:'Which directory contains the main Apache configuration file?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:0, hint:'/etc/httpd يحتوي الملف الرئيسي.'},
+    {type:'mcq', q:'Which directory contains the configuration files for the different Apache modules?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:3, hint:'/etc/httpd/conf.modules.d يحتوي على ملفات الوحدات.'},
+  {type:'mcq', q:'Which directory is used to drop configuration files that are installed from RPMs?', choices:['/etc/httpd','/etc/htttpd/conf','/etc/httpd/conf.d','/etc/httpd/conf.modules.d'], ans:2, hint:'/etc/httpd/conf.d لملفات RPM.'},
+  {type:'mcq', q:'Which virtual host type allows you to run multiple virtual hosts on the same IP address?', choices:['NameBased','IPBased','ConfigurationBased','Default'], ans:0, hint:'NameBased يسمح بـ IP واحد.'},
+  {type:'mcq', q:'Which line is used to start the definition of a virtual host that listens on port 80 of all IP addresses on the current server?', choices:['<VirtualHost *:80>','<VirtualHost *>','<NameHost *:80>','<NameHost *>'], ans:0, hint:'<VirtualHost *:80> هو الصحيح.'},
+  {type:'mcq', q:'Which of the following statements about virtual hosts is not true?', choices:['When virtual hosts are offered through an httpd process, the default configuration no longer works.','The names of virtual hosts must be resolvable through /etc/hosts or DNS.','To use virtual hosts, the mod_virt package must be installed.','Virtual host configurations can be specified in httpd.conf.'], ans:2, hint:'لا يوجد mod_virt، بل mod_vhost_alias.'},
+  {type:'mcq', q:'What specifically is the AllowOverride directive used for?', choices:['If set to yes, the contents of a directory can be changed.','This setting is specifically for user home directories. If set to yes, these will be included in the Apache configuration.','If set to yes, the .htaccess file in Apache directories will be considered, which will have a performance price.','Set to yes if you want to allow users to create additional configuration files in directories.'], ans:2, hint:'.htaccess يُستخدم مع AllowOverride.'},
+  {type:'mcq', q:'Which utility enables you to generate a TLS certificate and key for setting up a TLS security Apache web server?', choices:['genkey','openssl','createkey','Sslkey'], ans:1, hint:'openssl لتوليد الشهادات.'},
+  {type:'mcq', q:'What is the default directory where the TLS private key is stored?', choices:['/etc/ssl/certs/servername.key','/etc/pki/tls/private/servername.key','/etc/tls/keys/servername.key','/etc/ssl/certs/private/servername.key'], ans:1, hint:'/etc/pki/tls/private/ هو الموقع الافتراضي.'},
+  {type:'mcq', q:'When configuring an Apache server for use of TLS, some directives are generally changed. Which of the following is not typically among them?', choices:['SSLEngine','SSLCertificateFile','SSLCertificateKeyFile','ServerName'], ans:3, hint:'ServerName ليس خاص بـ TLS.'},
+  {type:'mcq', q:'How do you enable the httpd service to be started automatically when Booting?', choices:['systemctl enable httpd','systemctl start httpd','systemctl httpd enable','Service enable httpd'], ans:0, hint:'systemctl enable httpd يفعّل التشغيل التلقائي.'},
+  {type:'mcq', q:'Which command enables you to test a web server from a server that does not offer a graphical interface?', choices:['scp','ssh','elinks','firefox'], ans:2, hint:'elinks لاختبار بدون واجهة رسومية.'},
+  {type:'mcq', q:'What is the name of the default Apache configuration file?', choices:['http.conf','apache.conf','httpd.conf','conf.d'], ans:2, hint:'httpd.conf هو الملف الافتراضي.'},
+  {type:'mcq', q:'Which command enables you to see whether the Apache web server is currently running?', choices:['systemctl status apache','systemctl apache status','systemctl httpd status','systemctl status httpd'], ans:3, hint:'systemctl status httpd يظهر الحالة.'},
+  {type:'mcq', q:'In which directory would you typically find the TLS certificate file and the TLS key?', choices:['/etc/certs/pki','/var/log/certs/','/etc/pki/tls/certs/','/etc/certs/'], ans:2, hint:'/etc/pki/tls/certs/ للشهادات.'},
+  {type:'mcq', q:'What is the default configuration file for configuring TLS secured web servers?', choices:['ssl.conf','httpd.conf','apache.conf','http.conf'], ans:0, hint:'ssl.conf لـ TLS.'},
+  {type:'mcq', q:'Which of the following is not a standard component in an LVM setup?', choices:['Logical volume','File system','Volume group','Physical volume'], ans:1, hint:'File system ليس جزء من LVM.'},
+  {type:'mcq', q:'Which of the following is not an LVM feature?', choices:['Volume resizing','Hot replacement of failing disk','Copy on write','Snapshots'], ans:1, hint:'Hot replacement not LVM.'},
+  {type:'mcq', q:'Which partition type do you need on a GPT partition to mark it with the LVM partition type?', choices:['83','8e','8300','8e00'], ans:2, hint:'8300.'},
+  {type:'mcq', q:'Which of the following commands shows correctly how to create a logical volume that uses 50% of available disk space in the volume group?', choices:['vgadd -n lvdata -l +50%FREE vgdata','lvcreate lvdata -l 50%FREE vgdata','lvcreate -n lvdata -l 50%FREE vgdata','lvadd -n lvdata -l 50% FREE /dev/vgdata'], ans:2, hint:'lvcreate -n -l 50%FREE vgdata.'},
+  {type:'mcq', q:'Which command shows an overview of available physical volumes?', choices:['pvshow','pvdisplay','pvs','Pvlist'], ans:2, hint:'pvs.'},
+  {type:'mcq', q:'Which of the following statements about physical volumes is/are true?', choices:['Partitions should be flagged as LVM partition before assigning them as a physical volume.','Raw disks can be flagged as a physical volume.','Physical volumes can only be created on the Ext4 or XFS file system.','Physical volumes cannot be created on LUNs.'], ans:0, hint:'a and b true.'},
+  {type:'mcq', q:'Which of the following shows correct syntax for creating a volume group?', choices:['vgcreate /dev/vgdata sda1','vgcreate sda1 /dev/vgdata','vgcreate vgdata /dev/sda1','vgcreate vgdata sda1'], ans:3, hint:'vgcreate vgdata sda1.'},
+  {type:'mcq', q:'Which of the following commands would set the extent size that is used when creating a logical volume to a default of 4 MiB?', choices:['pvcreate -s 4M /dev/sda4','vgcreate -s 4M vgdata /dev/sda4','lvcreate -s 4M -L 200M -n lvdata vgdata','lvcreate -x 4M -L 200M -n lvdata vgdata'], ans:1, hint:'vgcreate -s 4M.'},
+  {type:'mcq', q:'Which of the following is not a likely correct name for the logical volume lvdata that was created in the volume group vgdata?', choices:['/dev/vgdata-lvdata','/dev/vgdata/lvdata','/dev/dm-1','/dev/mapper/vgdata-lvdata'], ans:1, hint:'/dev/vgdata/lvdata not standard.'},
+  {type:'mcq', q:'Which of the following commands resizes the logical volume /dev/vgdata/lvdata as well as the file system that is used on top of it, and adds 1GB to the existing volume size?', choices:['lvresize -l +1G -r /dev/vgdata/lvdata','lvresize -L +1G -r /dev/vgdata/lvdata','lvresize -L 1G -r /dev/vgdata/lvdata','lvresize -l 1G -f /dev/vgdata/lvdata'], ans:1, hint:'-L +1G -r.'},
+  {type:'mcq', q:'Which option do you use when using lvextend to make sure that the file system is also resized?', choices:['L','f','r'], ans:2, hint:'-r.'},
+  {type:'mcq', q:'This command shows a summary of available volume groups:', choices:['vgs','vgcreate','lvdisplay','Lvextend'], ans:0, hint:'vgs.'},
+  {type:'tf', q:'True or False: The physical extent size defines the size of the building blocks used to create logical volumes.', ans:true, hint:'صحيح.'},
+  {type:'mcq', q:'Which command shows a short summary of the physical volumes on your system as well as the volume group to which these belong?', choices:['pvdisplay','lvdisplay','pvcreate','Lvcreate'], ans:0, hint:'pvdisplay.'},
+  {type:'mcq', q:'What do you need to do to add an entire hard disk /dev/sdd to the volume group vgroup?', choices:['vgextend vggrp /dev/sdb2','vgextend vgdata /dev/sdd','vgextend vgroup /dev/sdd2','vgextend vgroup /dev/sdd'], ans:3, hint:'vgextend vgroup /dev/sdd.'},
+  {type:'mcq', q:'Which command enables you to create a logical volume lvvol1 with a size of 6MiB?', choices:['lvcreate -s lvvol1 -L 6MB lvvol1','lvcreate -n lvvol1 -L 6MiB vgdata','lvcreate -n lvvol1 -L 6MB lvvol1','lvcreate -s 4M -L 200M -n lvdata'], ans:1, hint:'lvcreate -n -L 6MiB vgdata.'},
+  {type:'mcq', q:'How do you show which logical volumes are available?', choices:['lvdisplay','vgdisplay','vgcreate','lvcreate'], ans:0, hint:'lvdisplay.'},
+  {type:'mcq', q:'Which command enables you to add 100MB to the logical volume lvvol1, assuming that the disk space is available in the volume group?', choices:['lvresize +100MB -r /dev/mapper/lvvol1','lvresize -L +100MB -r /dev/mapper/lvvol1','lvextend -r 100MB lvvol1','lvextend -m 100MB lvvol1'], ans:1, hint:'lvresize -L +100MB -r.'},
+  {type:'mcq', q:'Which option do you use when using lvextend to make sure that the file system is also resized?', choices:['L','f','r'], ans:2, hint:'-r.'},
+  {type:'mcq', q:'This command shows a summary of available volume groups:', choices:['vgs','vgcreate','lvdisplay','Lvextend'], ans:0, hint:'vgs.'},
+  {type:'tf', q:'True or False: The physical extent size defines the size of the building blocks used to create logical volumes.', ans:true, hint:'صحيح.'},
+  {type:'mcq', q:'To list all existing screen sessions, use the command:', choices:['screen -ls','screen -list','screen --ls-all'], ans:0, hint:'screen -ls.'},
+  {type:'tf', q:'True or False: The primary secure shell server configuration file is ssh_config.', ans:false, hint:'sshd_config.'},
+  {type:'mcq', q:'What is the secure shell equivalent for the telnet command?', choices:['rsync','scp','ssh'], ans:2, hint:'ssh.'},
+  {type:'mcq', q:'Where are the user ssh keys stored?', choices:['sshd_config','.ssh sub-directory','ssh-keygen'], ans:1, hint:'.ssh.'},
+  {type:'mcq', q:'What would the command ssh-copy-id do?', choices:['make unsecure remote connection','generate pair of keys','install public keys on remote systems'], ans:2, hint:'install public keys.'},
+  {type:'mcq', q:'What is the use of the ssh-keygen command?', choices:['generate authentication keys for ssh use','install public keys on remote systems','make unsecure remote connection'], ans:0, hint:'generate keys.'},
+  {type:'mcq', q:'List the two encryption techniques described in this chapter.', choices:['secure and insecure','symmetric and asymmetric','local and remote'], ans:1, hint:'symmetric and asymmetric.'},
+  {type:'mcq', q:'What is the default port used by the secure shell service?', choices:['22','2222','80'], ans:0, hint:'22.'},
+  {type:'mcq', q:'Which log file stores the authentication messages?', choices:['/var/log/dmesg','/var/log/httpd','/var/log/secure'], ans:2, hint:'/var/log/secure.'},
+  {type:'mcq', q:'Which of the following is not a common approach to prevent against brute-force attacks against SSH servers?', choices:['Disable X11 forwarding','Have SSH listening on a nondefault port','Disable password login','Allow specific users only to log in'], ans:0, hint:'Disable X11 not for brute-force.'},
+  {type:'mcq', q:'Which of the following successfully limits SSH server access to users bob and lisa only?', choices:['LimitUsers bob,lisa','AllowedUsers bob lisa','AllowUsers bob lisa','AllowedUsers bob,lisa'], ans:2, hint:'AllowUsers bob lisa.'},
+ [
+  {
+    "type": "mcq",
+    "q": "Which of the following descriptions is correct for the MaxAuthTries option?",
+    "choices": [
+      "After reaching the number of attempts specified here, the account will be locked.",
+      "This option specifies the maximum number of login attempts. After reaching half the number specified here, additional failures are logged.",
+      "After reaching the number of attempts specified here, the IP address where the login attempts come from is blocked.",
+      "The number specified here indicates the maximum amount of login attempts per minute."
+    ],
+    "ans": 0,
+    "hint": "خيار MaxAuthTries يحدد الحد الأقصى لمحاولات الدخول، وبعد الوصول إلى هذا العدد، سيتم قفل الحساب مؤقتًا لمنع الهجمات المتكررة."
+  },
+  {
+    "type": "mcq",
+    "q": "SSH login in your test environment takes a long time. Which of the following options could be most likely responsible for the connection time problems?",
+    "choices": [
+      "UseLogin",
+      "GSSAPIAuthentication",
+      "UseDNS",
+      "TCPKeepAlive"
+    ],
+    "ans": 2,
+    "hint": "خيار UseDNS يتطلب التحقق من أسماء النطاقات (DNS) قبل الاتصال، مما قد يسبب تأخيرًا كبيرًا إذا كان خادم DNS بطيئًا أو غير متاح."
+  },
+  {
+    "type": "mcq",
+    "q": "Which of the following options is not used to keep SSH connections alive?",
+    "choices": [
+      "TCPKeepAlive",
+      "ClientAliveInterval",
+      "ClientAliveCountMax",
+      "UseDNS"
+    ],
+    "ans": 3,
+    "hint": "خيار UseDNS يُستخدم للتحقق من هوية الخادم عبر DNS، ولا يرتبط بصيانة الاتصال المستمر، بخلاف الخيارات الأخرى التي تحافظ على الجلسة."
+  },
+  {
+    "type": "mcq",
+    "q": "Which file on SSH client computer needs to be added to set the Server-KeepAliveInterval for an individual client?",
+    "choices": [
+      "~/.ssh/ssh_config",
+      "~/.ssh/config",
+      "/etc/ssh/config",
+      "/etc/ssh/ssh_config"
+    ],
+    "ans": 1,
+    "hint": "ملف ~/.ssh/config هو المكان المناسب لإعدادات SSH المخصصة للمستخدم الفردي، حيث يمكن تعيين ServerAliveInterval للحفاظ على الاتصال دون التأثير على الإعدادات العامة."
+  },
+  {
+    "type": "mcq",
+    "q": "Which of the following is true about remote access to Linux servers from a Windows environment?",
+    "choices": [
+      "Open a shell terminal on Windows and type ssh. The ssh command is available as a default part of the Windows operating system.",
+      "Configure Remote Access on Windows if you want to access Linux servers running the sshd process.",
+      "Install the PuTTY program on Windows to access sshd services on Linux from Windows.",
+      "You cannot remotely access Linux machines from Windows."
+    ],
+    "ans": 2,
+    "hint": "برنامج PuTTY هو أداة شائعة وسهلة الاستخدام على Windows للاتصال بخدمة SSH (sshd) على خوادم Linux، ويوفر واجهة رسومية بسيطة."
+  },
+  {
+    "type": "mcq",
+    "q": "What is the name of the file in which the public key fingerprint of the SSH servers you have connected to in the past are stored?",
+    "choices": [
+      "/etc/ssh/remote_hosts",
+      "/etc/ssh/known_hosts",
+      "~/.ssh/remote_hosts",
+      "~/.ssh/known_hosts"
+    ],
+    "ans": 3,
+    "hint": "ملف ~/.ssh/known_hosts يحفظ بصمات المفاتيح العامة لخوادم SSH التي تم الاتصال بها سابقًا، للتحقق من الهوية ومنع هجمات الـ man-in-the-middle."
+  },
+  {
+    "type": "mcq",
+    "q": "Which of the following statements about key-based SSH authentication is true?",
+    "choices": [
+      "After creating the key pair, you need to copy the private key to the remote server.",
+      "Use scp to copy the public key to the remote server.",
+      "Use ssh-copy-id to copy the public key to the remote server.",
+      "Use ssh-keygen on the server to generate a key pair that matches the client keys."
+    ],
+    "ans": 2,
+    "hint": "أمر ssh-copy-id هو الطريقة الأسهل والأكثر أمانًا لنقل المفتاح العام إلى الخادم البعيد، حيث يضيفه تلقائيًا إلى ملف authorized_keys."
+  },
+  {
+    "type": "mcq",
+    "q": "Which command enables you to generate an ssh public/private key pair?",
+    "choices": [
+      "ssh-keygen",
+      "ssh-copy-id",
+      "scp"
+    ],
+    "ans": 0,
+    "hint": "أمر ssh-keygen هو الأداة الرسمية لإنشاء زوج مفاتيح SSH (عام وخاص)، ويمكن تخصيص نوع المفتاح وحجمه لتعزيز الأمان."
+  },
+  {
+    "type": "mcq",
+    "q": "useful command that allows you to open multiple terminal sessions",
+    "choices": [
+      "scp",
+      "ssh",
+      "screen",
+      "ssh-keygen"
+    ],
+    "ans": 2,
+    "hint": "أمر screen يتيح إدارة جلسات طرفية متعددة داخل جلسة واحدة، مما يسمح بالتبديل بينها أو فصلها وإعادة الاتصال لاحقًا دون فقدان العمل."
+  }
+]
+  ];
+
+  // randomize order each run
+  let questions = shuffle(questionsMaster.map((q,i)=>{ q._id=i; return q; }));
+  let index = 0, score = 0;
+  const total = questions.length;
+  const quizArea = document.getElementById('quizArea');
+  const prog = document.getElementById('prog');
+
+  function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+  function renderQuestion() {
+    if (!quizArea) {
+      console.error('quizArea element not found!');
+      return;
+    }
+    prog.style.width = `${Math.round((index/total)*100)}%`;
+    const item = questions[index];
+    let html = `<div class="question">Q${index+1}. ${item.q}</div>`;
+    if (item.type === 'mcq' || item.type === 'tf') {
+      if (item.type === 'tf') {
+        html += `<div class="choices"><div class="choice" data-i="true">True</div><div class="choice" data-i="false">False</div></div>`;
+      } else {
+        item._choices = shuffle(item.choices.map((c,i)=>({c,i})));
+        html += `<div class="choices">${item._choices.map(ch=>`<div class="choice" data-i="${ch.i}">${ch.c}</div>`).join('')}</div>`;
+      }
+      html += `<div class="controls"><div class="meta">Question ${index+1} of ${total}</div><div><button id="skip">Skip</button><button class="secondary" id="showHint">Show Hint</button></div></div><div class="result" id="result"></div>`;
+    } else if (item.type === 'order') {
+      item._shuffled = shuffle(item.items.slice());
+      html += `<div class="hint" style="font-weight:600;margin-bottom:8px">Drag items to order them correctly then press Submit.</div>`;
+      html += `<ul id="ordering" class="ordering-list">${item._shuffled.map((it,idx)=>`<li draggable="true" class="ordering-item" data-pos="${idx}">${it}</li>`).join('')}</ul>`;
+      html += `<div class="controls"><div class="meta">Question ${index+1} of ${total}</div><div><button id="submitOrder">Submit</button><button class="secondary" id="showHint">Show Hint</button></div></div><div class="result" id="result"></div>`;
+    }
+    quizArea.innerHTML = html;
+    attachHandlers(item);
+  }
+
+  function attachHandlers(item) {
+    if (item.type === 'mcq' || item.type === 'tf') {
+      document.querySelectorAll('.choice').forEach(el => el.addEventListener('click', e => {
+        const pickedRaw = e.currentTarget.dataset.i;
+        const res = document.getElementById('result');
+        if (!res) return;
+        res.classList.add('show');
+        let correct = false;
+        if (item.type === 'tf') {
+          const picked = (pickedRaw === 'true');
+          correct = (picked === item.ans);
+        } else {
+          const pickedIndex = Number(pickedRaw);
+          correct = (pickedIndex === item.ans);
+        }
+        if (correct) { res.innerHTML = `<div style="color:var(--ok);font-weight:700">Correct ✓</div><div class="hint">${item.hint}</div>`; score++; }
+        else {
+          if (item.type === 'mcq') {
+            const correctText = item.choices[item.ans];
+            res.innerHTML = `<div style="color:var(--bad);font-weight:700">Incorrect ✖ — Correct: ${correctText}</div><div class="hint">${item.hint}</div>`;
+          } else {
+            res.innerHTML = `<div style="color:var(--bad);font-weight:700">Incorrect ✖</div><div class="hint">${item.hint}</div>`;
+          }
+        }
+        document.querySelectorAll('.choice').forEach(c => c.setAttribute('aria-disabled', 'true'));
+      }));
+
+      document.getElementById('skip')?.addEventListener('click', () => { next(); });
+      document.getElementById('showHint')?.addEventListener('click', () => {
+        const r = document.getElementById('result');
+        if (r) { r.classList.add('show'); r.innerHTML = `<div class="hint">${item.hint}</div>`; }
+      });
+    } else if (item.type === 'order') {
+      const list = document.getElementById('ordering');
+      if (!list) return;
+      let dragSrc = null;
+      let touchStartY = 0;
+
+      list.querySelectorAll('.ordering-item').forEach((li, idx) => {
+        li.addEventListener('dragstart', e => {
+          dragSrc = li;
+          li.style.opacity = '0.5';
+        });
+        li.addEventListener('dragend', e => {
+          dragSrc = null;
+          li.style.opacity = '1';
+        });
+        li.addEventListener('dragover', e => e.preventDefault());
+        li.addEventListener('drop', e => {
+          e.preventDefault();
+          if (dragSrc && dragSrc !== li) {
+            const srcHTML = dragSrc.innerHTML;
+            dragSrc.innerHTML = li.innerHTML;
+            li.innerHTML = srcHTML;
+          }
+        });
+
+        li.addEventListener('touchstart', e => {
+          touchStartY = e.touches[0].clientY;
+          dragSrc = li;
+          li.style.opacity = '0.5';
+        });
+
+        li.addEventListener('touchmove', e => {
+          const touchY = e.touches[0].clientY;
+          const deltaY = touchY - touchStartY;
+          if (Math.abs(deltaY) > 10) {
+            const siblings = Array.from(list.children);
+            const currentIndex = siblings.indexOf(li);
+            let targetIndex = currentIndex;
+            if (deltaY > 0 && currentIndex < siblings.length - 1) targetIndex++;
+            else if (deltaY < 0 && currentIndex > 0) targetIndex--;
+            if (targetIndex !== currentIndex) {
+              const target = siblings[targetIndex];
+              const srcHTML = li.innerHTML;
+              li.innerHTML = target.innerHTML;
+              target.innerHTML = srcHTML;
+              touchStartY = touchY;
+            }
+          }
+        });
+
+        li.addEventListener('touchend', e => {
+          dragSrc = null;
+          li.style.opacity = '1';});
+      });
+
+      document.getElementById('submitOrder')?.addEventListener('click', () => {
+        const arranged = Array.from(list.children).map(li => li.textContent.trim());
+        const correctSeq = item.solution.map(i => item.items[i]);
+        const res = document.getElementById('result');
+        if (!res) return;
+        res.classList.add('show');
+        const ok = arranged.every((v, i) => v === correctSeq[i]);
+        if (ok) { res.innerHTML = `<div style="color:var(--ok);font-weight:700">Correct order ✓</div><div class="hint">${item.hint}</div>`; score++; }
+        else { res.innerHTML = `<div style="color:var(--bad);font-weight:700">Incorrect order ✖</div><div style="color:var(--muted);margin-top:6px">Correct order:</div><ol style="color:var(--muted)">${correctSeq.map(s => `<li>${s}</li>`).join('')}</ol><div class="hint">${item.hint}</div>`; }
+      });
+
+      document.getElementById('showHint')?.addEventListener('click', () => {
+        const r = document.getElementById('result');
+        if (r) { r.classList.add('show'); r.innerHTML = `<div class="hint">${item.hint}</div>`; }
+      });
+    }
+  }
+
+  function next() {
+    index++;
+    if (index < total) renderQuestion();
+    else finishQuiz();
+  }
+
+  function finishQuiz() {
+    clearInterval(timerInterval);
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('reviewBtn').style.display = 'inline-block';
+    document.getElementById('retryBtn').style.display = 'inline-block';
+    document.getElementById('final').style.display = 'block';
+    document.getElementById('scoreText').textContent = `Your score: ${score} / ${total}`;
+    const msg = score === total ? 'Perfect!' : (score >= Math.ceil(total * 0.7) ? 'Pass' : 'Needs Practice');
+    document.getElementById('scoreMsg').textContent = msg;
+    prog.style.width = '100%';
+  }
+
+  function review() {
+    const html = questions.map((q, i) => {
+      let out = `<div style="margin-bottom:12px"><div style="font-weight:700">Q${i+1}. ${q.q}</div>`;
+      if (q.type === 'mcq') { out += `<div style="color:var(--muted)">Answer: ${q.choices[q.ans]}</div>`; }
+      else if (q.type === 'tf') { out += `<div style="color:var(--muted)">Answer: ${q.ans ? 'True' : 'False'}</div>`; }
+      else { const correctSeq = q.solution.map(idx => q.items[idx]); out += `<div style="color:var(--muted)">Correct order: <ol>${correctSeq.map(s => `<li>${s}</li>`).join('')}</ol></div>`; }
+      out += `<div style="color:var(--muted);margin-top:6px">Hint (AR): ${q.hint}</div></div>`;
+      return out;
+    }).join('');
+    quizArea.innerHTML = `<div style="max-height:60vh;overflow:auto;padding-right:6px">${html}<div style="text-align:center"><button id="backBtn">Back</button></div></div>`;
+    document.getElementById('backBtn').addEventListener('click', () => { location.reload(); });
+  }
+
+  // buttons
+  document.getElementById('nextBtn').addEventListener('click', () => { next(); });
+  document.getElementById('reviewBtn').addEventListener('click', () => { review(); });
+  document.getElementById('retryBtn').addEventListener('click', () => { location.reload(); });
+
+  // Ensure DOM is fully loaded before starting
+  document.addEventListener('DOMContentLoaded', () => {
+    startTimer();
+    renderQuestion();
+  });
+</script>
+</body>
+</html>
