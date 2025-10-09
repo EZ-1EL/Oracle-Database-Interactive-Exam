@@ -252,3 +252,48 @@ button, .choice, .ordering-item { -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) {
     .card, .choice, .ordering-item, .progress>i, button { transition: none !important; animation: none !important; }
 }
+/* Homepage specific layout (index.html) */
+.home {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.home .card {
+    border-radius: 20px;
+    padding: 40px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.home h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: var(--accent);
+}
+
+.home p {
+    font-size: 16px;
+    color: var(--muted);
+    margin-bottom: 30px;
+}
+
+.home .buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.home footer {
+    margin-top: 25px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+@media (max-width: 480px) {
+    .home .card { padding: 24px; }
+    .home h1 { font-size: 22px; }
+    .home button { font-size: 14px; padding: 10px 16px; }
+}
