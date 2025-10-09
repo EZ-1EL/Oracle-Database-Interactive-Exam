@@ -38,13 +38,6 @@ Onlone Exam Test/
 ### Theming
 You can quickly tweak the theme by changing CSS variables in `styles.css` under `:root` (e.g., `--accent`, `--accent-2`, `--bg`).
 
-## Deploy
-### GitHub Pages
-1. Push this repository to GitHub
-2. Go to Settings → Pages
-3. Source: “Deploy from a branch”
-4. Branch: `main` / Folder: `/root` → Save
-5. Your site will be published at `https://<username>.github.io/<repo>/`
 
 ## License
 This project is provided for educational purposes. Review your organization’s policies before using in production.
@@ -56,7 +49,7 @@ Developed by Asim — EZEL.
 An interactive, mobile-friendly exam (83 questions) covering Oracle Database Fundamentals. Questions are in English with Arabic hints/explanations. Built as a single-page app using plain HTML, modern CSS, and vanilla JavaScript.
 
 ## 🚀 To See Demo  
-👉 [Click here to view the live demo](https://ez-1el.github.io/Oracle-Database-Interactive-Exam/)
+👉 [Click here to view the live demo](https://ez-1el.github.io/SVU-Exam/)
 
 ---
 
