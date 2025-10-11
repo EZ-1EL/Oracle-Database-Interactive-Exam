@@ -79,5 +79,5 @@ Note: When opening a course page, `js/app.js` looks for a course-specific array 
 This project is provided for educational purposes. Review your organization or school policies before using it in production.
 
 ## Credits
-Developed by Asim — EZEL.
+Developed by Aasem — EZEL.
 
